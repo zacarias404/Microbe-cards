@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>微生物拉丁名卡片 · MicroCards</title>
-<meta name="theme-color" content="#0f1729">
+<meta name="theme-color" content="#f2f5fa">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,18 +19,21 @@
   --b:#2f6fd0; --f:#12896c; --v:#7c4ddb; --p:#d97a17;
   --ok:#12a06a; --warn:#e0a008; --bad:#e0543f;
   --act:#0e9aa1; --arc:#9b4ddb; --cyan:#1f8fb0; --yeast:#e08a17; --mold:#a9743b; --basid:#7a9a3a; --algae:#1f9d6b;
+  --cocci:#bb3e86; --grod:#4b6795; --prok:#99652c; --ind:#0d8578;
   --shadow:0 10px 30px rgba(20,40,80,.10),0 2px 8px rgba(20,40,80,.06);
   --r:18px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
 }
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#0f1729; --bg2:#131d33; --card:#1a2439; --ink:#e8eef8; --ink2:#a3b1c8; --ink3:#6f7f97;
-    --line:#27324a; --pri:#5b95f5; --pri-soft:#1c2c49;
-    --b:#5b95f5; --f:#2fb894; --v:#a683ee; --p:#f0a24a;
-    --act:#43c4c0; --arc:#c08bef; --cyan:#4fb4d4; --yeast:#f0a24a; --mold:#cba06a; --basid:#a9c463; --algae:#5fd49b;
-    --shadow:0 12px 34px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
-  }
+/* 深色模式：由 <html data-theme="dark"> 控制，用户选择存在 localStorage（默认浅色） */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1a1a1a; --bg2:#242424; --card:#2d2d2d; --ink:#eceff4; --ink2:#b3b9c2; --ink3:#858c96;
+  --line:#3b3b3b; --pri:#5b95f5; --pri-soft:#22304a;
+  --b:#7aa8f7; --f:#3ec39b; --v:#b18ff2; --p:#f0a24a;
+  --act:#45c8c4; --arc:#c08bef; --cyan:#58bcd9; --yeast:#f0a24a; --mold:#cdA36f; --basid:#aec96a; --algae:#63d9a1;
+  --cocci:#e885b8; --grod:#93a9d4; --prok:#d4a56e; --ind:#4ec7b7;
+  --shadow:0 10px 28px rgba(0,0,0,.38),0 2px 8px rgba(0,0,0,.28);
 }
+html{color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;height:100%}
 body{
@@ -247,11 +250,20 @@ nav div.on{color:var(--pri)}
 
 </head>
 <body>
+<script>
+/* 主题预置：默认浅色；读取上次选择，避免首帧闪烁 */
+(function(){
+  var t="light";
+  try{ var m=JSON.parse(localStorage.getItem("mmc_misc_v1")||"{}"); if(m && m.theme==="dark") t="dark"; }catch(e){}
+  document.documentElement.setAttribute("data-theme",t);
+})();
+</script>
 <div id="app">
   <header>
     <div class="logo">MicroCards<small>微生物拉丁名</small></div>
     <div class="hdr-sp"></div>
     <div class="ring" id="ring"><svg width="36" height="36"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--line)" stroke-width="4"/><circle id="ringFg" cx="18" cy="18" r="15" fill="none" stroke="var(--pri)" stroke-width="4" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="94.2"/></svg><span class="num" id="ringNum">0</span></div>
+    <div class="iconbtn" id="btnTheme" title="深色 / 浅色模式">🌙</div>
     <div class="iconbtn" id="btnSearch" title="搜微生物拉丁名">🔍</div>
     <div class="iconbtn" id="btnSet">⚙</div>
   </header>
@@ -345,171 +357,181 @@ nav div.on{color:var(--pri)}
 <script>
 /* ============ 数据 ============ */
 const DATA = [
-  {"la": "Escherichia coli", "zh": "大肠埃希菌（大肠杆菌）", "g": "细菌", "tag": "G⁻杆菌", "syl": "E·sche·RI·chi·a  CO·li", "ph": "埃舍「里」希亚 「科」利", "fe": "革兰阴性短杆菌，周生鞭毛，发酵乳糖，IMViC 为「＋＋－－」，肠道正常菌群。", "us": "基因工程经典模式菌与表达宿主；也可致条件性感染（尿路感染等）。", "mn": "coli＝结肠；基因工程万能打工菌"},
-  {"la": "Bacillus subtilis", "zh": "枯草芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  sub·TI·lis", "ph": "巴「西」鲁斯 苏布「提」利斯", "fe": "革兰阳性杆菌，好氧，可形成抗逆性强的芽孢，分泌大量胞外酶。", "us": "蛋白酶、淀粉酶等酶制剂生产菌，也是芽孢与基因工程模式菌。", "mn": "subtilis＝柔/枯草；产酶小能手"},
-  {"la": "Bacillus thuringiensis", "zh": "苏云金芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  thu·rin·GI·en·sis", "ph": "巴「西」鲁斯 图林「吉」恩西斯", "fe": "革兰阳性芽孢杆菌，芽孢期产生伴胞晶体（δ-内毒素 / Bt 毒素），对昆虫专一毒性。", "us": "微生物杀虫剂 Bt 制剂来源，广泛用于绿色生物防治。", "mn": "苏云金 → Bt 晶体毒素 → 杀虫"},
-  {"la": "Bacillus licheniformis", "zh": "地衣芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  li·che·ni·FOR·mis", "ph": "巴「西」鲁斯 利凯尼「福」尔米斯", "fe": "革兰阳性芽孢杆菌，耐碱耐热，分泌碱性蛋白酶与杆菌肽。", "us": "工业化生产碱性蛋白酶（加酶洗衣粉用酶）、杆菌肽。", "mn": "地衣状 → 耐碱蛋白酶"},
-  {"la": "Bacillus megaterium", "zh": "巨大芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  me·ga·TE·ri·um", "ph": "巴「西」鲁斯 梅加「泰」里乌姆", "fe": "革兰阳性大杆菌，能形成大型芽孢，好氧，胞内有异染颗粒。", "us": "用于维生素和酶生产，也是研究芽孢形态的模式菌。", "mn": "mega＝巨大；个头最大的芽孢杆菌之一"},
-  {"la": "Bacillus cereus", "zh": "蜡样芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  ce·RE·us", "ph": "巴「西」鲁斯 塞「雷」乌斯", "fe": "革兰阳性芽孢杆菌，菌落呈蜡样，产生肠毒素。", "us": "可引起食物中毒；也是酶制剂与益生菌研究对象。", "mn": "cereus＝蜡样；隔夜饭的隐患"},
-  {"la": "Lactobacillus", "zh": "乳酸杆菌（属）", "g": "细菌", "tag": "G⁺无芽孢杆菌", "syl": "Lac·to·ba·CIL·lus", "ph": "拉克托巴「西」鲁斯", "fe": "革兰阳性无芽孢杆菌，厌氧或兼性厌氧，将糖发酵为乳酸。", "us": "酸奶、泡菜等乳酸发酵发酵剂；代表有植物、干酪、保加利亚乳杆菌。", "mn": "lacto＝乳酸；酸奶灵魂菌"},
-  {"la": "Lactobacillus bulgaricus", "zh": "保加利亚乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  bul·GA·ri·cus", "ph": "拉克托巴「西」鲁斯 布尔「加」里库斯", "fe": "革兰阳性杆菌，专性同型乳酸发酵，最适温度约 45 ℃。", "us": "酸奶（与嗜热链球菌共发酵）的核心菌种。", "mn": "保加利亚酸奶的命名菌"},
-  {"la": "Lactobacillus plantarum", "zh": "植物乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  plan·TA·rum", "ph": "拉克托巴「西」鲁斯 普兰「塔」鲁姆", "fe": "革兰阳性杆菌，能发酵多种糖，耐酸，广泛存在于植物表面。", "us": "蔬菜、谷物发酵（酸菜、饲料青贮）常用发酵剂。", "mn": "plantarum＝植物；腌菜高手"},
-  {"la": "Lactobacillus casei", "zh": "干酪乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  CA·se·i", "ph": "拉克托巴「西」鲁斯 「卡」塞伊", "fe": "革兰阳性杆菌，耐酸耐胆盐，常见于发酵乳与肠道。", "us": "干酪发酵及益生菌制剂常用菌株。", "mn": "casei＝干酪；奶酪里的菌"},
-  {"la": "Streptococcus thermophilus", "zh": "嗜热链球菌", "g": "细菌", "tag": "G⁺球菌", "syl": "Strep·to·COC·cus  ther·mo·PHI·lus", "ph": "斯特雷普托「科」库斯 特莫「菲」鲁斯", "fe": "革兰阳性链球菌，最适温度约 40–45 ℃，同型乳酸发酵。", "us": "与保加利亚乳杆菌共发酵生产酸奶。", "mn": "thermo＝耐热；酸奶搭档"},
-  {"la": "Acetobacter aceti", "zh": "醋化醋酸杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·ce·to·BAC·ter  a·CE·ti", "ph": "阿塞托「巴」克特 阿「塞」蒂", "fe": "革兰阴性好氧杆菌，具乙醇/乙酸脱氢酶，把乙醇氧化为乙酸。", "us": "食醋酿造（醋酸发酵）的关键菌。", "mn": "aceti＝醋；酒变醋靠它"},
-  {"la": "Gluconobacter oxydans", "zh": "氧化葡萄糖酸杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Glu·co·no·BAC·ter  o·xy·DANS", "ph": "格卢科诺「巴」克特 奥克西「丹」斯", "fe": "革兰阴性好氧杆菌，不完全氧化强，把葡萄糖氧化为葡萄糖酸/2-KGA。", "us": "维生素 C 两步发酵法的关键菌株（产 2-酮基-L-古龙酸）。", "mn": "氧化葡萄糖 → VC 前体"},
-  {"la": "Corynebacterium glutamicum", "zh": "谷氨酸棒状杆菌", "g": "细菌", "tag": "G⁺棒状杆菌", "syl": "Co·ry·ne·bac·TE·ri·um  glu·ta·mi·CUM", "ph": "科里内巴克「泰」里乌姆 格卢塔米「库」姆", "fe": "革兰阳性不规则棒状杆菌，好氧，营养缺陷型育种的典型对象。", "us": "味精（谷氨酸钠）及赖氨酸等多种氨基酸发酵生产菌。", "mn": "glutamicum＝谷氨酸；味精工厂主力"},
-  {"la": "Brevibacterium flavum", "zh": "黄色短杆菌", "g": "细菌", "tag": "G⁺短杆菌", "syl": "Bre·vi·bac·TE·ri·um  FLA·vum", "ph": "布雷维巴克「泰」里乌姆 「弗」拉武姆", "fe": "革兰阳性短杆菌，常作氨基酸高产育种亲本。", "us": "赖氨酸、谷氨酸等氨基酸发酵的重要生产菌。", "mn": "brevis＝短；黄色短棒菌"},
-  {"la": "Rhizobium", "zh": "根瘤菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Rhi·ZO·bi·um", "ph": "里「佐」比乌姆", "fe": "革兰阴性杆菌，与豆科植物共生形成根瘤，行固氮作用。", "us": "生物固氮、绿肥与豆科作物增产的核心微生物。", "mn": "rhizo＝根；根瘤固氮专家"},
-  {"la": "Agrobacterium tumefaciens", "zh": "根癌土壤杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·gro·bac·TE·ri·um  tu·me·fa·CI·ens", "ph": "阿格罗巴克「泰」里乌姆 图梅法「西」恩斯", "fe": "革兰阴性杆菌，经 Ti 质粒将 DNA 转入植物引起冠瘿瘤。", "us": "Ti 质粒是植物基因工程的天然载体。", "mn": "tumefaciens＝致瘤；植物转基因载体"},
-  {"la": "Azotobacter", "zh": "固氮菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·zo·to·BAC·ter", "ph": "阿佐托「巴」克特", "fe": "革兰阴性大杆菌，好氧，自由生活能固定大气氮，胞内有 PHB 颗粒。", "us": "生物肥料、固氮研究与 PHB 可降解材料来源。", "mn": "azo＝氮；自由固氮好氧菌"},
-  {"la": "Nitrobacter", "zh": "硝化杆菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Ni·tro·BAC·ter", "ph": "尼特罗「巴」克特", "fe": "革兰阴性小杆菌，化能自养，把亚硝酸氧化为硝酸获能。", "us": "土壤硝化作用（氮循环）的关键菌，污水生物脱氮用。", "mn": "nitro＝氮；硝化第二步"},
-  {"la": "Nitrosomonas", "zh": "亚硝化单胞菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Ni·tro·so·MO·nas", "ph": "尼特罗索「莫」纳斯", "fe": "革兰阴性杆菌，化能自养，把氨氧化为亚硝酸。", "us": "硝化作用第一步，与 Nitrobacter 共同完成硝化。", "mn": "nitroso＝亚硝；硝化第一步"},
-  {"la": "Pseudomonas", "zh": "假单胞菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas", "ph": "普塞多「莫」纳斯", "fe": "革兰阴性杆菌，端生鞭毛，好氧，能降解多种有机物（广食性）。", "us": "环境污染物生物降解、污水处理的重要菌；部分为人畜病原菌。", "mn": "pseudo＝假；代谢全能选手"},
-  {"la": "Pseudomonas fluorescens", "zh": "荧光假单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas  fluo·re·SCENS", "ph": "普塞多「莫」纳斯 弗洛雷「斯」岑斯", "fe": "革兰阴性杆菌，产荧光水溶性色素（绿脓菌素一类），好氧。", "us": "冷藏食品腐败常见菌；也用于生物防治与废水处理。", "mn": "fluorescens＝荧光；冷库里的光"},
-  {"la": "Pseudomonas aeruginosa", "zh": "铜绿假单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas  ae·ru·gi·NO·sa", "ph": "普塞多「莫」纳斯 埃鲁吉「诺」萨", "fe": "革兰阴性杆菌，产青绿色绿脓菌素与荧光色素，条件致病。", "us": "医院常见机会致病菌；也用于酶与次生代谢物研究。", "mn": "aeruginosa＝铜绿；绿脓菌"},
-  {"la": "Staphylococcus aureus", "zh": "金黄色葡萄球菌", "g": "细菌", "tag": "G⁺球菌", "syl": "Sta·phy·lo·COC·cus  AU·re·us", "ph": "斯塔菲洛「科」库斯 「奥」雷乌斯", "fe": "革兰阳性葡萄串状球菌，产金黄色色素，耐高盐，产肠毒素。", "us": "食品污染与化脓感染常见菌；也是酶/蛋白表达研究对象。", "mn": "aureus＝金色；葡萄串金球菌"},
-  {"la": "Micrococcus", "zh": "微球菌（属）", "g": "细菌", "tag": "G⁺球菌", "syl": "Mi·cro·COC·cus", "ph": "米克罗「科」库斯", "fe": "革兰阳性小球菌，严格好氧，常分布于皮肤与空气尘埃。", "us": "常用于环境监测与某些氨基酸/酶生产。", "mn": "micros＝小；迷你球菌"},
-  {"la": "Clostridium acetobutylicum", "zh": "丙酮丁醇梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  a·ce·to·bu·ty·LI·cum", "ph": "克洛斯特里「迪」乌姆 阿塞托布提「利」库姆", "fe": "革兰阳性大杆菌，严格厌氧，产芽孢，行丙酮-丁醇发酵。", "us": "工业丙酮丁醇（ABE）发酵经典菌种。", "mn": "acetobutylicum＝丙酮丁醇；ABE 发酵菌"},
-  {"la": "Clostridium botulinum", "zh": "肉毒梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  bo·tu·LI·num", "ph": "克洛斯特里「迪」乌姆 博图「利」努姆", "fe": "革兰阳性厌氧芽孢杆菌，产肉毒毒素（最强神经毒素之一）。", "us": "罐头食品安全的重点防控对象；毒素也用于医药。", "mn": "botulinum＝香肠；罐头杀手"},
-  {"la": "Clostridium tetani", "zh": "破伤风梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  te·TA·ni", "ph": "克洛斯特里「迪」乌姆 特「塔」尼", "fe": "革兰阳性厌氧芽孢杆菌，芽孢呈鼓槌状，产破伤风痉挛毒素。", "us": "深而窄伤口易致破伤风；类毒素用于疫苗。", "mn": "tetani＝强直；鼓槌芽孢菌"},
-  {"la": "Desulfovibrio", "zh": "脱硫弧菌（属）", "g": "细菌", "tag": "G⁻厌氧", "syl": "De·sul·fo·VI·brio", "ph": "德斯尔福「维」布里奥", "fe": "革兰阴性弧形杆菌，严格厌氧，以硫酸盐为电子受体（ sulfate reduction）。", "us": "造成金属与混凝土管道的硫酸盐腐蚀；参与硫循环。", "mn": "desulfo＝脱硫；腐蚀管道菌"},
-  {"la": "Thiobacillus", "zh": "硫杆菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Thi·o·ba·CIL·lus", "ph": "希奥巴「西」鲁斯", "fe": "革兰阴性杆菌，氧化硫/硫代硫酸获能，化能自养。", "us": "矿石生物浸出（浸铜、浸铀）、脱硫研究用。", "mn": "thio＝硫；吃硫的菌"},
-  {"la": "Zymomonas mobilis", "zh": "运动发酵单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Zy·mo·MO·nas  mo·BI·lis", "ph": "兹莫「莫」纳斯 莫「比」利斯", "fe": "革兰阴性杆菌，靠 ED 途径将糖高效发酵为乙醇。", "us": "潜在的高效乙醇发酵菌（比酵母理论得率高）。", "mn": "zymo＝发酵；酒精快产菌"},
-  {"la": "Xanthomonas campestris", "zh": "野油菜黄单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Xan·tho·MO·nas  cam·pe·stris", "ph": "赞托「莫」纳斯 坎佩「斯」特里斯", "fe": "革兰阴性杆菌，产胞外多糖黄原胶（xanthan）。", "us": "工业黄原胶（食品增稠剂）的生产菌。", "mn": "xantho＝黄；黄原胶之母"},
-  {"la": "Bifidobacterium", "zh": "双歧杆菌（属）", "g": "细菌", "tag": "G⁺厌氧", "syl": "Bi·fi·do·bac·TE·ri·um", "ph": "比菲多巴克「泰」里乌姆", "fe": "革兰阳性分叉杆菌，严格厌氧，母乳喂养婴儿肠道优势菌。", "us": "重要益生菌，调节肠道微生态、增强免疫。", "mn": "bifid＝两裂；肠道好菌"},
-  {"la": "Propionibacterium", "zh": "丙酸杆菌（属）", "g": "细菌", "tag": "G⁺厌氧", "syl": "Pro·pi·o·ni·bac·TE·ri·um", "ph": "普罗皮奥尼巴克「泰」里乌姆", "fe": "革兰阳性多形态杆菌，厌氧，发酵产丙酸与乙酸。", "us": "瑞士干酪孔眼（产 CO₂/丙酸）与益生菌（痤疮丙酸杆菌）相关。", "mn": "propion＝丙酸；干酪孔眼菌"},
-  {"la": "Serratia marcescens", "zh": "粘质沙雷氏菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Ser·ra·ti·a  mar·ce·SCENS", "ph": "塞拉「提」亚 马尔塞「斯」岑斯", "fe": "革兰阴性杆菌，产红色灵菌素（prodigiosin）色素，常污染医院环境。", "us": "实验室与卫生指示菌；也产胞外酶与色素。", "mn": "marcescens＝腐败；红色污染菌"},
-  {"la": "Salmonella", "zh": "沙门氏菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Sal·mo·NEL·la", "ph": "萨尔莫「内」拉", "fe": "革兰阴性周毛杆菌，多数能运动，兼性厌氧，部分致食物中毒。", "us": "食物（蛋、肉）安全重点防控的人畜共患病原菌。", "mn": "沙门＝伤寒/肠炎；食品安全盯防菌"},
-  {"la": "Streptomyces griseus", "zh": "灰色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  gri·SE·us", "ph": "斯特雷普托「迈」塞斯 格里斯「塞」乌斯", "fe": "革兰阳性丝状放线菌，基内菌丝分支，产灰色气生孢子链。", "us": "产链霉素、灰霉素等抗生素；放线菌模式种。", "mn": "griseus＝灰；链霉素老家"},
-  {"la": "Streptomyces aureofaciens", "zh": "金色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  au·re·o·FA·ci·ens", "ph": "斯特雷普托「迈」塞斯 奥雷奥「法」西恩斯", "fe": "革兰阳性丝状菌，产金黄色色素与四环素类抗生素。", "us": "金霉素（氯四环素）等四环素类的生产菌。", "mn": "aureus＝金；四环素来源"},
-  {"la": "Streptomyces rimosus", "zh": "龟裂链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ri·MO·sus", "ph": "斯特雷普托「迈」塞斯 里「莫」苏斯", "fe": "革兰阳性丝状菌，菌落表面龟裂状，产土霉素。", "us": "氧四环素（土霉素）的生产菌。", "mn": "rimosus＝龟裂；土霉素菌"},
-  {"la": "Streptomyces hygroscopicus", "zh": "吸水链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  hy·gro·sco·pi·CUS", "ph": "斯特雷普托「迈」塞斯 希格罗斯科皮「库」斯", "fe": "革兰阳性丝状菌，气生菌丝吸水状，产多种次生代谢物。", "us": "产春日霉素、雷帕霉素等，生物防治与医药用。", "mn": "hygroscopicus＝吸水；农药源菌"},
-  {"la": "Saccharopolyspora erythraea", "zh": "红霉糖多孢菌（红霉素链霉菌）", "g": "放线菌", "tag": "放线菌", "syl": "Sa·ccha·ro·po·ly·SPO·ra  e·ry·thrae·a", "ph": "萨克哈罗波利「斯」波拉 埃里特雷「阿」", "fe": "原称红霉素链霉菌，革兰阳性丝状放线菌，产大环内酯。", "us": "红霉素等抗生素的生产菌。", "mn": "erythraea＝红；红霉素生产者"},
-  {"la": "Streptomyces noursei", "zh": "诺尔斯链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  nour·SE·i", "ph": "斯特雷普托「迈」塞斯 努尔「塞」伊", "fe": "革兰阳性丝状菌，产制霉菌素等抗真菌抗生素。", "us": "多烯类抗生素（如制霉菌素）来源。", "mn": "诺尔斯；抗真菌抗生素"},
-  {"la": "Streptomyces kanamyceticus", "zh": "卡那霉素链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ka·na·my·ce·TI·cus", "ph": "斯特雷普托「迈」塞斯 卡纳米塞「提」库斯", "fe": "革兰阳性丝状菌，产氨基糖苷类抗生素卡那霉素。", "us": "卡那霉素生产菌，用于抗感染与筛选标记。", "mn": "kanamycin；卡那霉素源"},
-  {"la": "Streptomyces venezuelae", "zh": "委内瑞拉链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ve·ne·zu·e·LAE", "ph": "斯特雷普托「迈」塞斯 韦内苏埃「莱」", "fe": "革兰阳性丝状菌，产氯霉素等。", "us": "氯霉素的发现与生产菌之一。", "mn": "venezuelae＝委内瑞拉；氯霉素源"},
-  {"la": "Streptomyces albus", "zh": "白色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  AL·bus", "ph": "斯特雷普托「迈」塞斯 「阿」尔武斯", "fe": "革兰阳性丝状菌，气生菌丝白色，产多种抗生素。", "us": "产白色霉素等，抗生素筛选常见种。", "mn": "albus＝白；白孢子链霉"},
-  {"la": "Streptomyces lavendulae", "zh": "淡紫链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  la·ven·du·LAE", "ph": "斯特雷普托「迈」塞斯 拉文杜「莱」", "fe": "革兰阳性丝状菌，气生菌丝淡紫色，产链丝菌素等。", "us": "多种抗生素与活性物质的来源种。", "mn": "lavendulae＝薰衣草紫；紫孢子"},
-  {"la": "Micromonospora", "zh": "小单孢菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Mi·cro·mo·NO·spo·ra", "ph": "米克罗莫「诺」斯波拉", "fe": "放线菌，菌丝无横隔，孢子单个着生于孢子梗顶端。", "us": "产庆大霉素等氨基糖苷类抗生素。", "mn": "micro＋mono＝小单孢；庆大霉素家"},
-  {"la": "Nocardia", "zh": "诺卡氏菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "No·car·DI·a", "ph": "诺卡尔「迪」亚", "fe": "放线菌，菌丝易断裂成杆状，弱抗酸，部分致病。", "us": "产利福霉素等；也用于环境污染物降解。", "mn": "诺卡；分枝断裂菌"},
-  {"la": "Frankia", "zh": "弗兰克氏菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Fran·KI·a", "ph": "弗兰「基」亚", "fe": "放线菌，与非豆科木本植物（如杨梅、沙棘）共生固氮。", "us": "非豆科植物的共生固氮菌，改良瘠薄土壤。", "mn": "Frank 命名；木本固氮菌"},
-  {"la": "Thermoactinomyces", "zh": "高温放线菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Ther·mo·ac·ti·no·MY·ces", "ph": "特莫阿克蒂诺「迈」塞斯", "fe": "嗜热放线菌，形成耐高温芽孢，常存在于堆肥、土壤。", "us": "高温堆肥与高温酶研究的来源菌。", "mn": "thermo＋actinomyces＝耐热放线菌"},
-  {"la": "Methanobacterium", "zh": "甲烷杆菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·bac·TE·ri·um", "ph": "梅塔诺巴克「泰」里乌姆", "fe": "严格厌氧古菌，杆状，以 H₂/CO₂ 或甲酸产甲烷。", "us": "厌氧消化（沼气）产甲烷的核心功能菌。", "mn": "methano＝甲烷；沼气制造机"},
-  {"la": "Methanococcus", "zh": "甲烷球菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·COC·cus", "ph": "梅塔诺「科」库斯", "fe": "严格厌氧古菌，球状，产甲烷，多见于海底热液与厌氧环境。", "us": "厌氧消化与极端环境产甲烷研究。", "mn": "甲烷球菌；海底产气"},
-  {"la": "Methanosarcina", "zh": "甲烷八叠球菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·sar·CI·na", "ph": "梅塔诺萨尔「奇」纳", "fe": "严格厌氧古菌，可呈八叠球状，底物利用最广的产甲烷菌。", "us": "厌氧消化中转化乙酸/甲醇为甲烷的关键菌。", "mn": "sarcina＝八叠；最全能产甲烷菌"},
-  {"la": "Halobacterium", "zh": "嗜盐杆菌（属）", "g": "古菌", "tag": "极端嗜盐古菌", "syl": "Ha·lo·bac·TE·ri·um", "ph": "哈洛巴克「泰」里乌姆", "fe": "极端嗜盐古菌，需高盐（~3.5 M NaCl）才能生长，膜含细菌视紫红质。", "us": "盐湖、盐场微生物；菌紫质用于光合蛋白与生物电子研究。", "mn": "halo＝盐；紫膜盐菌"},
-  {"la": "Halococcus", "zh": "嗜盐球菌（属）", "g": "古菌", "tag": "极端嗜盐古菌", "syl": "Ha·lo·COC·cus", "ph": "哈洛「科」库斯", "fe": "极端嗜盐古菌，球状，具厚细胞壁抗高渗，常与嗜盐杆菌共生。", "us": "高盐环境（盐田、咸水湖）微生物群落成员。", "mn": "盐球菌；盐里的小球"},
-  {"la": "Sulfolobus", "zh": "硫化叶菌（属）", "g": "古菌", "tag": "嗜热嗜酸古菌", "syl": "Sul·fo·LO·bus", "ph": "萨尔福「洛」武斯", "fe": "嗜热嗜酸古菌，叶状不规则细胞，氧化硫，最适 ~70–80 ℃、pH~2–3。", "us": "高温酸矿浸出（浸铜、浸铀）与环境修复用。", "mn": "sulfo＋lobus＝硫叶；热酸吃硫菌"},
-  {"la": "Thermoplasma", "zh": "热原体（属）", "g": "古菌", "tag": "嗜热嗜酸古菌", "syl": "Ther·mo·PLAS·ma", "ph": "特莫「普」拉斯马", "fe": "嗜热嗜酸古菌，无细胞壁，具细胞膜（非肽聚糖），~55–60 ℃、pH~2。", "us": "极端环境微生物膜结构与进化研究模式。", "mn": "thermo＋plasma＝热原体；无壁热菌"},
-  {"la": "Thermococcus", "zh": "热球菌（属）", "g": "古菌", "tag": "超嗜热古菌", "syl": "Ther·mo·COC·cus", "ph": "特莫「科」库斯", "fe": "超嗜热古菌，球状，严格厌氧，产 H₂，生于海底热液口（~85 ℃）。", "us": "极端酶（热稳定酶）的重要来源。", "mn": "热球菌；海底热泉菌"},
-  {"la": "Pyrococcus", "zh": "高温球菌（属）", "g": "古菌", "tag": "超嗜热古菌", "syl": "Py·ro·COC·cus", "ph": "皮罗「科」库斯", "fe": "超嗜热古菌，球状，严格厌氧，最适 ~100 ℃，产 H₂ 与 CO₂。", "us": "超耐热 DNA 聚合酶等工业酶的热门来源。", "mn": "pyro＝火；近沸水球菌"},
-  {"la": "Anabaena", "zh": "鱼腥藻（属）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "A·na·BAE·na", "ph": "阿纳「贝」纳", "fe": "丝状蓝细菌，有异形胞（固氮），能行产氧光合与固氮。", "us": "稻田生物固氮（满江红共生）与水体氮循环。", "mn": "鱼腥味；异形胞固氮"},
-  {"la": "Nostoc", "zh": "念珠藻（属）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "NO·stoc", "ph": "「诺」斯托克", "fe": "丝状蓝细菌，球形细胞串成念珠状，有异形胞固氮。", "us": "发菜、葛仙米等可食；固氮与水土保持。", "mn": "念珠串；发菜本体"},
-  {"la": "Nostoc flagelliforme", "zh": "发菜（念珠藻）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "NO·stoc  fla·gel·li·FOR·me", "ph": "「诺」斯托克 弗拉盖利「福」尔梅", "fe": "念珠藻的一种，丝体毛发状，耐旱，生于干旱草原。", "us": "名贵食用蓝藻（发菜）；生态固沙重要。", "mn": "发状菜；固沙又好吃"},
-  {"la": "Oscillatoria", "zh": "颤藻（属）", "g": "蓝细菌", "tag": "丝状蓝藻", "syl": "O·scil·la·TO·ri·a", "ph": "奥西拉「托」里亚", "fe": "丝状蓝细菌，无鞘，靠滑行使藻丝颤动摆动。", "us": "池塘水华常见，部分产微囊藻毒素类似物。", "mn": "oscilla＝摆动；会抖的丝"},
-  {"la": "Lyngbya", "zh": "鞘丝藻（属）", "g": "蓝细菌", "tag": "丝状蓝藻", "syl": "Lyng·BY·a", "ph": "林「比」亚", "fe": "丝状蓝细菌，藻丝外具明显胶鞘，常成团块。", "us": "热带海域成害（海草病），也产活性肽。", "mn": "鞘外有衣；礁石上的丝"},
-  {"la": "Spirulina", "zh": "螺旋藻（属）", "g": "蓝细菌", "tag": "螺旋蓝藻", "syl": "Spi·ru·LI·na", "ph": "斯皮鲁「利」纳", "fe": "螺旋状蓝细菌，无异形胞但能固氮，蛋白含量高。", "us": "高蛋白保健食品（钝顶、极大螺旋藻）与饲料。", "mn": "spiral＝螺旋；蛋白藻"},
-  {"la": "Microcystis", "zh": "微囊藻（属）", "g": "蓝细菌", "tag": "球状蓝藻", "syl": "Mi·cro·CYS·tis", "ph": "米克罗「西斯」蒂斯", "fe": "球状蓝细菌，群集成囊状，富营养水体易暴发水华。", "us": "产微囊藻毒素，饮用水安全重点监控对象。", "mn": "micro＋cyst＝微囊；水华毒藻"},
-  {"la": "Synechococcus", "zh": "聚球藻（属）", "g": "蓝细菌", "tag": "单细胞蓝藻", "syl": "Sy·ne·cho·COC·cus", "ph": "西内科「科」库斯", "fe": "单细胞蓝细菌，海洋与淡水广布，是海洋初级生产力主力。", "us": "海洋碳循环与光合固碳重要参与者。", "mn": "syn＋coccus＝聚球；海洋小蓝点"},
-  {"la": "Prochlorococcus", "zh": "原绿球藻（属）", "g": "蓝细菌", "tag": "单细胞蓝藻", "syl": "Pro·chlo·ro·COC·cus", "ph": "普罗克洛罗「科」库斯", "fe": "极小的光合蓝细菌，含叶绿素 a/b 类似物，海洋最丰富的光合生物。", "us": "全球海洋固碳与产氧的关键微型生产者。", "mn": "原绿；海洋最微小的光合者"},
-  {"la": "Saccharomyces cerevisiae", "zh": "酿酒酵母", "g": "酵母菌", "tag": "芽殖酵母", "syl": "Sa·cca·ro·my·CES  ce·re·VI·siae", "ph": "萨克哈罗米「塞」斯 塞雷「维」西埃", "fe": "单细胞芽殖真菌，兼性厌氧，发酵糖产乙醇与 CO₂，模式真核。", "us": "酿酒、面包发酵与真核分子生物学研究的核心。", "mn": "cerevisiae＝啤酒；酵母之王"},
-  {"la": "Saccharomyces pastorianus", "zh": "卡尔酵母（下面酵母）", "g": "酵母菌", "tag": "芽殖酵母", "syl": "Sa·cca·ro·my·CES  pas·to·ri·A·nus", "ph": "萨克哈罗米「塞」斯 帕斯托里「阿」努斯", "fe": "低温下发酵的酿酒酵母近缘种，沉于底部（下面发酵）。", "us": "拉格啤酒（下面发酵啤酒）酿造用酵母。", "mn": "pastorianus；拉格啤酒酵母"},
-  {"la": "Saccharomyces rouxii", "zh": "鲁氏酵母", "g": "酵母菌", "tag": "耐高渗酵母", "syl": "Sa·cca·ro·my·CES  rou·XI·i", "ph": "萨克哈罗米「塞」斯 鲁「克」西伊", "fe": "耐高渗酵母，能在高盐/高糖环境生长并产风味。", "us": "酱油、豆酱等高盐发酵的重要菌种。", "mn": "鲁氏；酱园里的耐盐酵母"},
-  {"la": "Schizosaccharomyces pombe", "zh": "粟酒裂殖酵母", "g": "酵母菌", "tag": "裂殖酵母", "syl": "Schi·zo·sa·ccha·ro·my·CES  POM·be", "ph": "希佐萨克哈罗米「塞」斯 「庞」贝", "fe": "以裂殖（一分为二）繁殖的酵母，细胞杆状，真核模式之二。", "us": "细胞周期与染色体研究的重要模式生物。", "mn": "pombe＝粟酒；裂殖模式菌"},
-  {"la": "Candida utilis", "zh": "产朊假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  u·ti·LIS", "ph": "坎迪「达」 乌蒂「利」斯", "fe": "假丝酵母，能同化多种糖与无机氮，蛋白含量高。", "us": "单细胞蛋白（SCP）与饲料蛋白生产菌。", "mn": "utilis＝有用；蛋白饲料菌"},
-  {"la": "Candida tropicalis", "zh": "热带假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  tro·pi·CA·lis", "ph": "坎迪「达」 特罗皮「卡」利斯", "fe": "假丝酵母，能利用烷烃/油脂生长，适应性强。", "us": "石油蛋白、长链二元酸发酵及环境修复用。", "mn": "热带；吃油的酵母"},
-  {"la": "Candida albicans", "zh": "白色假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  al·bi·CANS", "ph": "坎迪「达」 阿尔比「坎」斯", "fe": "人体正常菌群之一，条件致病时可致念珠菌感染。", "us": "医药与微生物学研究的致病酵母模型。", "mn": "albicans＝白；鹅口疮元凶"},
-  {"la": "Pichia pastoris", "zh": "巴斯德毕赤酵母", "g": "酵母菌", "tag": "甲醇酵母", "syl": "Pi·chi·a  pas·to·ris", "ph": "皮「奇」亚 帕斯「托」里斯", "fe": "甲基营养酵母，以甲醇为唯一碳源，强启动子宜表达外源蛋白。", "us": "重组蛋白（疫苗、酶）高效表达的工程宿主。", "mn": "毕赤；蛋白表达工厂"},
-  {"la": "Kluyveromyces marxianus", "zh": "马克思克鲁维酵母", "g": "酵母菌", "tag": "克鲁维酵母", "syl": "Kluy·ve·ro·my·CES  mar·xi·A·nus", "ph": "克卢维罗米「塞」斯 马克西「阿」努斯", "fe": "克鲁维酵母，能发酵乳糖，耐热，生长快。", "us": "乳清（乳糖）利用、乳糖酶与单细胞蛋白生产。", "mn": "克鲁维；吃乳糖的酵母"},
-  {"la": "Kluyveromyces lactis", "zh": "乳酸克鲁维酵母", "g": "酵母菌", "tag": "克鲁维酵母", "syl": "Kluy·ve·ro·my·CES  LAC·tis", "ph": "克卢维罗米「塞」斯 「拉」克蒂斯", "fe": "克鲁维酵母，能发酵乳糖，常用于异源蛋白表达。", "us": "乳清转化与食品酶（乳糖酶）生产。", "mn": "lactis＝乳；乳清利用菌"},
-  {"la": "Hansenula polymorpha", "zh": "多形汉逊酵母", "g": "酵母菌", "tag": "甲醇酵母", "syl": "Han·se·nu·la  po·ly·MOR·pha", "ph": "汉塞「努」拉 波利「莫」尔法", "fe": "甲基营养酵母，细胞多形，强甲醇启动子利于蛋白表达。", "us": "重组蛋白与单细胞蛋白生产的工程酵母。", "mn": "多形；甲醇蛋白工厂"},
-  {"la": "Torulopsis（Candida）glabrata", "zh": "光滑球拟酵母", "g": "酵母菌", "tag": "球拟酵母", "syl": "Tor·u·lop·sis  gla·BRA·ta", "ph": "托鲁洛「普」西斯 格拉「布拉」塔", "fe": "小型酵母，常作 Candida glabrata，条件致病。", "us": "医院环境中常见的机会致病酵母。", "mn": "光滑；机会致病菌"},
-  {"la": "Rhodotorula", "zh": "红酵母（属）", "g": "酵母菌", "tag": "红酵母", "syl": "Rho·do·to·ru·LA", "ph": "罗多托鲁「拉」", "fe": "产类胡萝卜素使菌落呈红/橙色的酵母，好氧。", "us": "类胡萝卜素（天然色素）生产与油脂积累研究。", "mn": "rhodo＝红；胡萝卜素红菌"},
-  {"la": "Debaryomyces", "zh": "德巴利酵母（属）", "g": "酵母菌", "tag": "德巴利酵母", "syl": "De·ba·ry·o·my·CES", "ph": "德巴里奥米「塞」斯", "fe": "耐盐耐硝化的酵母，常见于腌制品与高盐环境。", "us": "发酵食品（香肠、酱油）风味与防腐相关。", "mn": "德巴利；腌货里的酵母"},
-  {"la": "Cryptococcus", "zh": "隐球酵母（属）", "g": "酵母菌", "tag": "隐球酵母", "syl": "Cryp·to·COC·cus", "ph": "克里普托「科」库斯", "fe": "具荚膜的酵母，代表种新型隐球菌为机会致病菌。", "us": "医学真菌学与荚膜机制研究对象。", "mn": "crypto＝隐藏；荚膜酵母"},
-  {"la": "Yarrowia lipolytica", "zh": "解脂耶氏酵母", "g": "酵母菌", "tag": "解脂酵母", "syl": "Yar·ro·wi·a  li·po·LY·ti·ca", "ph": "亚罗「维」亚 利波利「提」卡", "fe": "能大量分泌脂肪酶/蛋白酶、同化烃类的酵母。", "us": "油脂化工、酶制剂与单细胞蛋白生产。", "mn": "lipolytica＝解脂；吃油的菌"},
-  {"la": "Zygosaccharomyces rouxii", "zh": "鲁氏接合酵母", "g": "酵母菌", "tag": "接合酵母", "syl": "Zy·go·sa·ccha·ro·my·CES  rou·XI·i", "ph": "兹戈萨克哈罗米「塞」斯 鲁「克」西伊", "fe": "耐高渗、耐盐的接合酵母，产酱香风味。", "us": "酱油、味噌等传统高盐发酵的核心酵母。", "mn": "zygo＝接合；酱香之源"},
-  {"la": "Brettanomyces", "zh": "酒香酵母（属）", "g": "酵母菌", "tag": "酒香酵母", "syl": "Bret·ta·no·my·CES", "ph": "布雷塔诺米「塞」斯", "fe": "产四氢吡喃类香气的酵母，葡萄酒/啤酒中可增香或致劣。", "us": "精酿啤酒与葡萄酒风味（马厩香）相关菌。", "mn": "brett；酒里的香与臭"},
-  {"la": "Aspergillus niger", "zh": "黑曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  NI·ger", "ph": "阿斯佩尔「吉」鲁斯 「尼」杰尔", "fe": "丝状真菌，分生孢子头黑色，好氧，产大量有机酸与酶。", "us": "柠檬酸、葡萄糖酸发酵与糖化酶、纤维素酶生产。", "mn": "黑孢子；柠檬酸大王"},
-  {"la": "Aspergillus oryzae", "zh": "米曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  o·RY·zae", "ph": "阿斯佩尔「吉」鲁斯 奥「里」泽", "fe": "丝状真菌，分生孢子黄绿色，富含蛋白酶与淀粉酶。", "us": "酱油、味噌、清酒酿造的「国菌」（日本）。", "mn": "oryzae＝米；酱曲之魂"},
-  {"la": "Aspergillus flavus", "zh": "黄曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  FLA·vus", "ph": "阿斯佩尔「吉」鲁斯 「弗」拉武斯", "fe": "丝状真菌，分生孢子黄绿色，在霉变花生/玉米上产黄曲霉毒素。", "us": "食品安全重点监控；产毒与致癌研究模型。", "mn": "flavus＝黄；剧毒黄曲霉毒素"},
-  {"la": "Aspergillus nidulans", "zh": "构巢曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  ni·du·LANS", "ph": "阿斯佩尔「吉」鲁斯 尼杜「兰」斯", "fe": "丝状真菌，分生孢子绿/黄色，遗传背景清晰。", "us": "真菌遗传学与次级代谢调控的模式生物。", "mn": "构巢；遗传模式霉"},
-  {"la": "Aspergillus terreus", "zh": "土曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  TER·re·us", "ph": "阿斯佩尔「吉」鲁斯 「泰」雷乌斯", "fe": "丝状真菌，分生孢子土黄色，产洛伐他汀等。", "us": " statin 类降脂药（洛伐他汀）的生产菌。", "mn": "土色；降脂药源"},
-  {"la": "Penicillium chrysogenum", "zh": "产黄青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  chry·so·GE·num", "ph": "佩尼西利「乌」姆 克吕索「盖」努姆", "fe": "丝状真菌，青绿色分生孢子，产青霉素。", "us": "青霉素（首个抗生素）的工业高产菌种。", "mn": "chrysogenum＝产金；青霉素母机"},
-  {"la": "Penicillium citrinum", "zh": "桔青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ci·TRI·num", "ph": "佩尼西利「乌」姆 西「特里」努姆", "fe": "丝状真菌，桔黄色分生孢子，产桔青霉素。", "us": "霉变大米常见菌，产肾毒素；也用于核酸生产。", "mn": "citrinum＝桔黄；霉米毒素菌"},
-  {"la": "Penicillium camemberti", "zh": "卡门柏青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ca·mem·BER·ti", "ph": "佩尼西利「乌」姆 卡芒「贝」尔蒂", "fe": "丝状真菌，白色柔毛状，分解脂肪与蛋白产香。", "us": "软质干酪（卡门贝尔、布里）表面熟成菌。", "mn": "卡门贝尔；奶酪白毛"},
-  {"la": "Penicillium roqueforti", "zh": "娄地青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ro·que·FOR·ti", "ph": "佩尼西利「乌」姆 罗克福「尔」蒂", "fe": "丝状真菌，蓝绿色孢子，耐氧低，产风味与青霉香。", "us": "蓝纹干酪（洛克福）内部的呈香霉菌。", "mn": "蓝纹奶酪之心"},
-  {"la": "Penicillium expansum", "zh": "扩展青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ex·pan·SUM", "ph": "佩尼西利「乌」姆 埃克斯潘「苏」姆", "fe": "丝状真菌，侵害苹果等水果，产展青霉素。", "us": "贮藏水果腐烂与毒素（展青霉素）监控对象。", "mn": "扩展；烂苹果霉"},
-  {"la": "Rhizopus oryzae", "zh": "米根霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Rhi·zo·PUS  o·RY·zae", "ph": "里佐「普」斯 奥「里」泽", "fe": "丝状真菌，假根状菌丝、黑色孢子囊，糖化力强。", "us": "米酒/甜酒曲、乳酸与糖化酶（根霉淀粉酶）生产。", "mn": "根霉；酒曲糖化菌"},
-  {"la": "Rhizopus stolonifer", "zh": "黑根霉（匍枝根霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Rhi·zo·PUS  sto·lo·ni·FER", "ph": "里佐「普」斯 斯托洛尼「费」尔", "fe": "丝状真菌，匍匐菌丝、黑色毛状霉，常见于面包。", "us": "面包/果蔬腐生霉，也是接合生殖教学材料。", "mn": "黑面包霉；接合生殖范例"},
-  {"la": "Mucor racemosus", "zh": "总状毛霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Mu·COR  ra·ce·MO·sus", "ph": "穆「科」尔 拉塞「莫」苏斯", "fe": "丝状真菌，无隔菌丝，白色絮状，产孢子囊。", "us": "腐生霉；传统腐乳（毛豆腐）发酵菌种之一。", "mn": "毛霉；腐乳白毛菌"},
-  {"la": "Mucor mucedo", "zh": "大毛霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Mu·COR  mu·CE·do", "ph": "穆「科」尔 穆「塞」多", "fe": "丝状真菌，生长迅速，大型孢子囊，常见于土壤粪便。", "us": "土壤腐生霉，常与根霉混淆的教学种。", "mn": "大毛霉；土里的大霉"},
-  {"la": "Neurospora crassa", "zh": "粗糙脉孢菌（红色面包霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Neu·ro·SPO·ra  CRAS·sa", "ph": "神经罗「斯」波拉 「克」拉斯萨", "fe": "丝状真菌，子囊孢子红色，有性/无性世代清晰。", "us": "真菌遗传学（一基因一酶）经典模式生物。", "mn": "脉孢；红色面包霉模式"},
-  {"la": "Trichoderma reesei", "zh": "里氏木霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Tri·cho·DER·ma  ree·SE·i", "ph": "特里科「德」尔马 雷「塞」伊", "fe": "丝状真菌，绿色分生孢子，分泌极强纤维素酶系。", "us": "纤维素酶（纺织、饲料、生物质糖化）主力生产菌。", "mn": "木霉；纤维素酶工厂"},
-  {"la": "Trichoderma viride", "zh": "绿色木霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Tri·cho·DER·ma  VI·ri·de", "ph": "特里科「德」尔马 「维」里德", "fe": "丝状真菌，绿色分生孢子，产木霉素与纤维素酶。", "us": "生物防治（拮抗病原菌）与酶生产用。", "mn": "viride＝绿；生防绿霉"},
-  {"la": "Monascus purpureus", "zh": "红曲霉（紫色红曲霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Mo·nas·cus  pur·PU·re·us", "ph": "莫「纳」斯库斯 普尔普「雷」乌斯", "fe": "丝状真菌，产红/紫色色素（红曲色素）与莫纳可林 K。", "us": "红曲米（红糟）、降脂功能成分与食品着色。", "mn": "红曲；东方红酵"},
-  {"la": "Fusarium graminearum", "zh": "禾谷镰刀菌", "g": "霉菌", "tag": "丝状真菌", "syl": "Fu·sa·ri·UM  gra·mi·ne·A·rum", "ph": "富萨里「乌」姆 格拉米内「阿」鲁姆", "fe": "丝状真菌，镰刀形大孢子，侵害小麦玉米产呕吐毒素。", "us": "粮谷赤霉病与镰刀菌毒素（DON）防控对象。", "mn": "镰刀；麦穗毒霉"},
-  {"la": "Fusarium oxysporum", "zh": "尖镰孢菌", "g": "霉菌", "tag": "丝状真菌", "syl": "Fu·sa·ri·UM  o·xy·SPO·rum", "ph": "富萨里「乌」姆 奥克西「斯」波鲁姆", "fe": "丝状真菌，镰刀形孢子，多种专化型致植物枯萎病。", "us": "作物土传枯萎病病原与生物防治研究。", "mn": "尖镰；植物枯萎病源"},
-  {"la": "Botrytis cinerea", "zh": "灰葡萄孢（灰霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Bo·try·tis  ci·ne·RE·a", "ph": "博特「里」蒂斯 西内「雷」阿", "fe": "丝状真菌，灰色霉层，侵害果蔬（灰霉病），也能贵腐。", "us": "葡萄贵腐酒（贵腐菌）与果蔬采后病害双重角色。", "mn": "灰霉；贵腐亦病害"},
-  {"la": "Geotrichum candidum", "zh": "白地霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Geo·tri·chum  can·DI·dum", "ph": "格奥特里「库」姆 坎「迪」杜姆", "fe": "裂殖酵母状霉菌，形成关节孢子，分解蛋白脂肪。", "us": "干酪（如卡门贝尔）表面熟成与风味菌。", "mn": "白地霉；奶酪风味菌"},
-  {"la": "Aureobasidium pullulans", "zh": "出芽短梗霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Au·re·o·ba·si·di·UM  pul·lu·LANS", "ph": "奥雷奥巴西迪「乌」姆 普卢卢「兰」斯", "fe": "黑酵母状真菌，出芽繁殖，产普鲁兰多糖。", "us": "普鲁兰（pullulan）食品胶与生物被膜研究。", "mn": "出芽短梗；普鲁兰胶源"},
-  {"la": "Cladosporium", "zh": "枝孢霉（属）", "g": "霉菌", "tag": "丝状真菌", "syl": "Cla·do·SPO·ri·um", "ph": "克拉多「斯」波里乌姆", "fe": "丝状真菌，橄榄色分生孢子链，广泛分布于空气植物。", "us": "常见空气过敏原与果蔬表面腐生霉。", "mn": "枝孢；空气中的黑霉"},
-  {"la": "Agaricus bisporus", "zh": "双孢蘑菇（洋菇）", "g": "担子菌", "tag": "食用菌", "syl": "A·ga·ri·cus  bi·SPO·rus", "ph": "阿加里「库」斯 比「斯」波鲁斯", "fe": "伞菌，菌褶褐色，担子上多为双核孢子，世界栽培最广。", "us": "商业化栽培最多的食用菌（白蘑菇、褐菇）。", "mn": "双孢；超市洋菇"},
-  {"la": "Lentinula edodes", "zh": "香菇", "g": "担子菌", "tag": "食用菌", "syl": "Len·ti·nu·la  e·DO·tes", "ph": "伦蒂努「拉」 埃「多」特斯", "fe": "伞菌，菌盖有鳞片，木腐生，担孢子无色。", "us": "东亚最重要的栽培食用菌，含香菇多糖。", "mn": "edodes＝可食；香蕈之王"},
-  {"la": "Pleurotus ostreatus", "zh": "平菇（糙皮侧耳）", "g": "担子菌", "tag": "食用菌", "syl": "Pleu·ro·tus  os·tre·A·tus", "ph": "普勒罗「图」斯 奥斯特雷「阿」图斯", "fe": "侧耳属，菌盖呈贝壳状、侧生，木屑基质易栽培。", "us": "大宗栽培食用菌，粗放易种（平菇）。", "mn": "ostreatus＝牡蛎；蚝菇"},
-  {"la": "Pleurotus eryngii", "zh": "杏鲍菇", "g": "担子菌", "tag": "食用菌", "syl": "Pleu·ro·tus  e·ryn·GII", "ph": "普勒罗「图」斯 埃林「吉」伊", "fe": "侧耳属，肉质子实体粗大，具杏仁香。", "us": "广栽培的优质食用菌（杏鲍菇）。", "mn": "杏鲍；鲍鱼口感菇"},
-  {"la": "Flammulina velutipes", "zh": "金针菇", "g": "担子菌", "tag": "食用菌", "syl": "Flam·mu·li·na  ve·lu·TI·pes", "ph": "弗拉穆利「纳」 韦卢「提」佩斯", "fe": "伞菌，菌柄细长金黄，低温出菇。", "us": "常见栽培食用菌（金针菇），火锅常客。", "mn": "velutipes＝天鹅绒柄；金针菇"},
-  {"la": "Hypsizygus marmoreus", "zh": "真姬菇（蟹味菇）", "g": "担子菌", "tag": "食用菌", "syl": "Hyp·si·zy·gus  mar·mo·RE·us", "ph": "希普西「齐」古斯 马尔莫「雷」乌斯", "fe": "玉蕈属，丛生、菌盖灰白有大理石纹，蟹香味。", "us": "工厂化栽培食用菌（蟹味菇/白玉菇）。", "mn": "大理石纹；蟹味白玉菇"},
-  {"la": "Volvariella volvacea", "zh": "草菇", "g": "担子菌", "tag": "食用菌", "syl": "Vol·va·ri·el·la  vol·va·CE·a", "ph": "沃尔瓦里「埃」拉 沃尔瓦「塞」阿", "fe": "伞菌，具菌托（脚苞），高温型，子实体卵形至伞状。", "us": "热带栽培食用菌（草菇），鲜食为主。", "mn": "volva＝菌托；草堆上的菇"},
-  {"la": "Pholiota nameko", "zh": "滑菇（榆黄蘑近缘）", "g": "担子菌", "tag": "食用菌", "syl": "Pho·li·o·ta  na·ME·ko", "ph": "福利奥「塔」 纳「梅」科", "fe": "伞菌，菌盖黏滑，丛生木腐生。", "us": "日本及东亚栽培食用菌（滑菇/滑子蘑）。", "mn": "nameko；黏滑小菇"},
-  {"la": "Ganoderma lucidum", "zh": "灵芝", "g": "担子菌", "tag": "药用菌", "syl": "Ga·no·der·ma  lu·CI·dum", "ph": "加诺「德」尔马 卢「奇」杜姆", "fe": "多孔菌，漆样光泽红褐色菌盖，木腐生。", "us": "传统药用真菌，含三萜与多糖（灵芝）。", "mn": "lucidum＝光亮；仙草灵芝"},
-  {"la": "Auricularia auricula-judae", "zh": "木耳", "g": "担子菌", "tag": "食用菌", "syl": "Au·ri·cu·la·ri·a  au·ri·cu·la·ju·dae", "ph": "奥里库拉「里」亚 奥里库拉尤「达」埃", "fe": "胶质耳状子实体，生于阔叶树枯木。", "us": "常见栽培食用菌（黑木耳），爽滑富胶质。", "mn": "auricula＝耳；黑木耳"},
-  {"la": "Tremella fuciformis", "zh": "银耳", "g": "担子菌", "tag": "食用菌", "syl": "Tre·mel·la  fu·ci·FOR·mis", "ph": "特雷「梅」拉 富西「福」尔米斯", "fe": "胶质、花瓣状白色子实体，需伴生香灰菌才能完成生活史。", "us": "滋补食用菌（银耳/白木耳），羹汤常用。", "mn": "fuciformis＝海藻形；雪耳"},
-  {"la": "Dictyophora indusiata", "zh": "竹荪", "g": "担子菌", "tag": "食用菌", "syl": "Dic·ty·o·pho·ra  in·du·si·A·ta", "ph": "迪克提奥「福」拉 因杜西「阿」塔", "fe": "鬼笔科，具网格菌裙（菌 net），形态奇特。", "us": "名贵食用菌（竹荪），清香脆嫩。", "mn": "indusiata＝裙；网状菌裙"},
-  {"la": "Coprinus comatus", "zh": "毛头鬼伞（鸡腿菇）", "g": "担子菌", "tag": "食用菌", "syl": "Co·pri·nus  co·MA·tus", "ph": "科普里「努」斯 科「马」图斯", "fe": "伞菌，幼时柱状似鸡腿，成熟自溶墨汁状。", "us": "可栽培食用菌（鸡腿菇），鲜嫩宜鲜食。", "mn": "comatus＝毛；鸡腿菇"},
-  {"la": "Grifola frondosa", "zh": "灰树花（舞茸）", "g": "担子菌", "tag": "药用菌", "syl": "Gri·fo·la  fron·DO·sa", "ph": "格里福「拉」 弗龙「多」萨", "fe": "多孔菌，呈莲花/脑状大丛，木腐生。", "us": "药用与食用菌（灰树花/舞茸），含β-葡聚糖。", "mn": "frondosa＝叶状；舞茸"},
-  {"la": "Hericium erinaceus", "zh": "猴头菇", "g": "担子菌", "tag": "药用菌", "syl": "He·ri·ci·um  e·ri·na·CE·us", "ph": "赫里「奇」乌姆 埃里纳「塞」乌斯", "fe": "齿菌，子实体布满针状菌刺，形似猴头。", "us": "名贵食药两用菌（猴头菇），养胃。", "mn": "erinaceus＝刺猬；猴头菌"},
-  {"la": "Chlorella", "zh": "小球藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Chlo·rel·la", "ph": "克洛「雷」拉", "fe": "单细胞绿藻，球形，叶绿体杯状，光合效率高。", "us": "高蛋白单细胞食品/饲料，污水净化与固碳。", "mn": "chlorella＝小绿；蛋白藻"},
-  {"la": "Chlorella pyrenoidosa", "zh": "蛋白核小球藻", "g": "藻类", "tag": "绿藻", "syl": "Chlo·rel·la  py·re·noi·DO·sa", "ph": "克洛「雷」拉 皮雷诺伊「多」萨", "fe": "小球藻的一种，具蛋白核（pyrenoid），蛋白含量高。", "us": "优质单细胞蛋白与保健食品来源。", "mn": "蛋白核；高蛋白小球藻"},
-  {"la": "Scenedesmus", "zh": "栅藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Sce·ne·DES·mus", "ph": "塞内「德」斯穆斯", "fe": "群体绿藻，4–8 个细胞排成栅状，常见于淡水。", "us": "污水净化、生物燃料（油脂）与饵料藻。", "mn": "栅状排列；污水清道夫"},
-  {"la": "Dunaliella salina", "zh": "杜氏盐藻", "g": "藻类", "tag": "绿藻", "syl": "Du·na·li·el·la  sa·LI·na", "ph": "杜纳利「埃」拉 萨「利」纳", "fe": "无壁单细胞绿藻，耐极高盐，高盐下积累β-胡萝卜素。", "us": "天然β-胡萝卜素（色素）生产藻。", "mn": "salina＝盐；盐湖红藻"},
-  {"la": "Chlamydomonas", "zh": "衣藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Chla·my·do·MO·nas", "ph": "克拉米多「莫」纳斯", "fe": "具两根鞭毛、眼点的单细胞绿藻，有性/无性清晰。", "us": "藻类遗传学、鞭毛与趋光性研究的模式生物。", "mn": "衣藻；鞭毛模式藻"},
-  {"la": "Euglena", "zh": "眼虫（属）", "g": "藻类", "tag": "裸藻", "syl": "Eu·GLE·na", "ph": "埃「格」莱纳", "fe": "具鞭毛与叶绿体的单细胞，兼养（有光光合、无光异养）。", "us": "水体富营养指示生物；也可作饵料/蛋白源。", "mn": "眼点虫；动植物兼有"},
-  {"la": "Spirogyra", "zh": "水绵（属）", "g": "藻类", "tag": "绿藻", "syl": "Spi·ro·GY·ra", "ph": "斯皮罗「吉」拉", "fe": "丝状绿藻，叶绿体呈螺旋带状，接合生殖典型。", "us": "淡水常见丝状藻，教学展示接合生殖。", "mn": "spiro＝螺旋；带状叶绿体"},
-  {"la": "Ulva", "zh": "石莼（属，海白菜）", "g": "藻类", "tag": "绿藻", "syl": "UL·va", "ph": "「乌」尔瓦", "fe": "叶状绿藻（浒苔/石莼），两层细胞构成的「海白菜」。", "us": "食用海藻与海水养殖环境指示。", "mn": "海白菜；两层的绿"},
-  {"la": "Porphyra", "zh": "紫菜（属）", "g": "藻类", "tag": "红藻", "syl": "Por·phy·ra", "ph": "波尔「菲」拉", "fe": "叶状红藻，含藻红素，是紫菜（海苔）的原料。", "us": "重要经济海藻（紫菜/海苔）养殖。", "mn": "紫菜；海苔本体"},
-  {"la": "Gracilaria", "zh": "江蓠（属）", "g": "藻类", "tag": "红藻", "syl": "Gra·ci·la·ri·a", "ph": "格拉西拉「里」亚", "fe": "红藻，枝柱状，富含琼胶（琼脂）成分。", "us": "琼脂（洋菜）提取的主要原料海藻。", "mn": "琼脂原料藻"},
-  {"la": "Laminaria", "zh": "海带（属）", "g": "藻类", "tag": "褐藻", "syl": "La·mi·na·ri·a", "ph": "拉米纳「里」亚", "fe": "大型褐藻，具假根、柄与叶状带片，含褐藻胶。", "us": "海带养殖与褐藻胶（藻胶）工业原料。", "mn": "海带；褐藻胶源"},
-  {"la": "Sargassum", "zh": "马尾藻（属）", "g": "藻类", "tag": "褐藻", "syl": "Sar·gas·sum", "ph": "萨尔「加」苏姆", "fe": "大型褐藻，具气囊与固着器，漂浮成马尾藻海。", "us": "褐藻胶与褐藻多酚来源，药用/饲料。", "mn": "气囊漂浮；马尾藻海"},
-  {"la": "Nannochloropsis", "zh": "微拟球藻（属）", "g": "藻类", "tag": "褐藻（微藻）", "syl": "Nan·no·chlo·rop·sis", "ph": "南诺克隆「普」西斯", "fe": "单细胞褐藻门微藻，油脂含量高，海水种为主。", "us": "微藻生物柴油与 EPA 油脂生产热点藻。", "mn": "微拟球；产油微藻"},
-  {"la": "Haematococcus pluvialis", "zh": "雨生红球藻", "g": "藻类", "tag": "绿藻", "syl": "Hae·ma·to·COC·cus  plu·vi·A·lis", "ph": "赫马托「科」库斯 普卢维「阿」利斯", "fe": "绿藻，胁迫下大量积累虾青素（红色）。", "us": "天然虾青素（强抗氧化剂）生产藻。", "mn": "haemato＝血；虾青素红藻"},
-  {"la": "Isochrysis", "zh": "等鞭金藻（属）", "g": "藻类", "tag": "金藻", "syl": "I·so·chry·sis", "ph": "伊索「克」里斯", "fe": "金藻，具两根不等长鞭毛，富含 DHA 等脂肪酸。", "us": "水产幼苗（贝类、虾）优质饵料微藻。", "mn": "金藻；育苗饵料"},
-  {"la": "Navicula", "zh": "舟形藻（属）", "g": "藻类", "tag": "硅藻", "syl": "Na·vi·cu·la", "ph": "纳维「库」拉", "fe": "硅藻，壳面舟形，具硅质细胞壁（硅酸盐）。", "us": "淡水/海水浮游硅藻，指示水体与饵料。", "mn": "舟形；硅壳微藻"},
-  {"la": "Asterionella", "zh": "星杆藻（属）", "g": "藻类", "tag": "硅藻", "syl": "As·te·ri·o·nel·la", "ph": "阿斯特里奥「内」拉", "fe": "硅藻，细胞星状辐射排列成群体。", "us": "淡水浮游硅藻，水质指示与饵料。", "mn": "星杆；放射状硅藻"},
-  {"la": "Crypthecodinium cohnii", "zh": "寇氏隐甲藻", "g": "藻类", "tag": "甲藻", "syl": "Cryp·the·co·di·ni·um  COH·ni·i", "ph": "克里普特科迪「尼」乌姆 「科」恩尼伊", "fe": "甲藻，异养可发酵，天然富集 DHA。", "us": "工业化发酵生产藻油 DHA 的菌株。", "mn": "隐甲藻；DHA 藻油源"},
-  {"la": "Bacteriophage T4", "zh": "T4 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE T4", "ph": "巴克泰里奥「菲」吉 T4", "fe": "感染大肠杆菌的双链 DNA 噬菌体，具尾鞘与二十面体头部。", "us": "分子生物学经典模式（基因调控、DNA 复制研究）。", "mn": "噬菌体；细菌的病毒"},
-  {"la": "Bacteriophage λ", "zh": "λ 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE λ", "ph": "巴克泰里奥「菲」吉 λ", "fe": "感染大肠杆菌的温和噬菌体，可溶原或裂解，基因组图谱清晰。", "us": "基因工程载体（λ 噬菌体载体）与调控研究。", "mn": "λ；溶原裂解双模"},
-  {"la": "Bacteriophage M13", "zh": "M13 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE M13", "ph": "巴克泰里奥「菲」吉 M13", "fe": "丝状单链 DNA 噬菌体，不裂解而持续分泌噬菌体颗粒。", "us": "噬菌体展示技术（抗体/肽库）的核心载体。", "mn": "丝状；展示技术载体"},
-  {"la": "Bacteriophage φX174", "zh": "φX174 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE φX174", "ph": "巴克泰里奥「菲」吉 φX174", "fe": "单链 DNA 噬菌体，基因组极小，首个被测全序列的 DNA 生物。", "us": "分子生物学与测序史上的标志性病毒。", "mn": "φX174；测序里程碑"},
-  {"la": "Tobacco mosaic virus", "zh": "烟草花叶病毒", "g": "病毒", "tag": "植物病毒", "syl": "To·BAC·co  mo·SA·ic  VI·rus", "ph": "托「巴」科 莫「赛」克 「维」鲁斯", "fe": "杆状 RNA 植物病毒，衣壳螺旋排列，首个被结晶的病毒。", "us": "植物病毒研究模式，曾证「遗传物质是核酸」。", "mn": "烟草杆状；病毒学奠基"},
-  {"la": "Cauliflower mosaic virus", "zh": "花椰菜花叶病毒", "g": "病毒", "tag": "植物病毒", "syl": "Cau·li·FLOW·er  mo·SA·ic  VI·rus", "ph": "考利「弗」劳尔 莫「赛」克 「维」鲁斯", "fe": "双链 DNA 植物病毒（花椰菜花叶病毒科），转化研究用。", "us": "植物基因工程载体（CaMV 35S 启动子）来源。", "mn": "花叶；35S 启动子源"},
-  {"la": "Influenza virus", "zh": "流感病毒", "g": "病毒", "tag": "动物病毒", "syl": "In·flu·EN·za  VI·rus", "ph": "因弗卢「恩」扎 「维」鲁斯", "fe": "分节段单链 RNA 病毒，包膜有血凝素/神经氨酸酶，易变异。", "us": "引起季节性流感；疫苗需每年更新。", "mn": "流感；年年变脸的病毒"},
-  {"la": "Human immunodeficiency virus", "zh": "人类免疫缺陷病毒（HIV）", "g": "病毒", "tag": "动物病毒", "syl": "Hu·man  im·mu·no·de·fi·ci·EN·cy  VI·rus", "ph": "休曼 伊姆诺德菲西「恩」西 「维」鲁斯", "fe": "逆转录 RNA 病毒，攻击 CD4⁺ T 细胞，致艾滋病。", "us": "艾滋病病原；抗逆转录病毒治疗靶点。", "mn": "HIV；攻击免疫的病毒"},
-  {"la": "Hepatitis B virus", "zh": "乙型肝炎病毒", "g": "病毒", "tag": "动物病毒", "syl": "He·pa·ti·tis  B  VI·rus", "ph": "赫帕「提」蒂斯 B 「维」鲁斯", "fe": "部分双链 DNA 病毒，嗜肝，可致慢性肝炎与肝癌。", "us": "乙肝病原；疫苗与抗病毒治疗研究对象。", "mn": "乙肝；嗜肝 DNA 病毒"},
-  {"la": "SARS-CoV-2", "zh": "新型冠状病毒", "g": "病毒", "tag": "动物病毒", "syl": "SARS-CoV-2", "ph": "SARS-CoV-2", "fe": "具刺突（S 蛋白）的冠状病毒，单链 RNA，引起新冠肺炎。", "us": "2019 年起全球大流行病原；疫苗研发焦点。", "mn": "新冠；带刺突的冠状病毒"},
-  {"la": "Adenovirus", "zh": "腺病毒（属）", "g": "病毒", "tag": "动物病毒", "syl": "A·de·no·VI·rus", "ph": "阿德诺「维」鲁斯", "fe": "无包膜双链 DNA 病毒，衣壳二十面体，致呼吸道/结膜感染。", "us": "基因治疗与疫苗载体研究常用。", "mn": "腺病毒；基因载体"},
-  {"la": "Herpes simplex virus", "zh": "单纯疱疹病毒", "g": "病毒", "tag": "动物病毒", "syl": "Her·pes  sim·plex  VI·rus", "ph": "赫「尔」佩斯 西姆「普」莱克斯 「维」鲁斯", "fe": "双链 DNA 病毒，可潜伏感染（神经节）后复发。", "us": "口唇/生殖器疱疹病原；潜伏感染模型。", "mn": "疱疹；潜伏复发的病毒"},
-  {"la": "Poliovirus", "zh": "脊髓灰质炎病毒", "g": "病毒", "tag": "动物病毒", "syl": "Po·lio·VI·rus", "ph": "波利奥「维」鲁斯", "fe": "无包膜单链 RNA 病毒，侵犯运动神经元致瘫痪。", "us": "小儿麻痹病原；灭活/减毒疫苗已近消灭它。", "mn": "脊灰；疫苗消灭目标"},
-  {"la": "Rotavirus", "zh": "轮状病毒", "g": "病毒", "tag": "动物病毒", "syl": "Ro·ta·VI·rus", "ph": "罗塔「维」鲁斯", "fe": "分节段双链 RNA 病毒，轮状衣壳，致婴幼儿腹泻。", "us": "婴幼儿腹泻主要病原；有口服疫苗。", "mn": "轮状；宝宝腹泻菌"},
-  {"la": "Rabies virus", "zh": "狂犬病病毒", "g": "病毒", "tag": "动物病毒", "syl": "RA·bies  VI·rus", "ph": "「雷」比斯 「维」鲁斯", "fe": "弹状单链 RNA 病毒，嗜神经，致死率近 100%。", "us": "狂犬病病原；暴露后疫苗可预防。", "mn": "狂犬；致命神经病毒"},
-  {"la": "Vaccinia virus", "zh": "痘苗病毒", "g": "病毒", "tag": "动物病毒", "syl": "Vac·ci·ni·a  VI·rus", "ph": "瓦克西「尼」亚 「维」鲁斯", "fe": "双链 DNA 痘病毒，与牛痘近缘，用作疫苗载体。", "us": "天花疫苗株；也是基因治疗载体。", "mn": "痘苗；天花疫苗载体"},
-  {"la": "Sendai virus", "zh": "仙台病毒", "g": "病毒", "tag": "动物病毒", "syl": "Sen·dai  VI·rus", "ph": "森「大」伊 「维」鲁斯", "fe": "副黏病毒，单链 RNA，能介导细胞融合。", "us": "细胞融合（杂交瘤制备）与实验用病毒。", "mn": "仙台；细胞融合剂"},
-  {"la": "Newcastle disease virus", "zh": "新城疫病毒", "g": "病毒", "tag": "动物病毒", "syl": "New·cas·tle  di·SEA·se  VI·rus", "ph": "纽「卡」索 迪「西」兹 「维」鲁斯", "fe": "副黏病毒，单链 RNA，致禽类新城疫，溶瘤潜力。", "us": "禽类烈性传染病病原；溶瘤病毒研究。", "mn": "新城疫；禽类瘟病"}
+  {"la": "Escherichia coli", "zh": "大肠埃希菌（大肠杆菌）", "g": "细菌", "tag": "G⁻杆菌", "syl": "E·sche·RI·chi·a  CO·li", "ph": "埃舍「里」希亚 「科」利", "fe": "革兰阴性短杆菌，周生鞭毛，发酵乳糖，IMViC 为「＋＋－－」，肠道正常菌群。", "us": "基因工程经典模式菌与表达宿主；也可致条件性感染（尿路感染等）。", "mn": "coli＝结肠；基因工程万能打工菌；词源：Escherichia＝纪念 T. Escherich（发现者）"},
+  {"la": "Bacillus subtilis", "zh": "枯草芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  sub·TI·lis", "ph": "巴「西」鲁斯 苏布「提」利斯", "fe": "革兰阳性杆菌，好氧，可形成抗逆性强的芽孢，分泌大量胞外酶。", "us": "蛋白酶、淀粉酶等酶制剂生产菌，也是芽孢与基因工程模式菌。", "mn": "subtilis＝柔/枯草；产酶小能手；词源：Bacillus＝小杆菌（拉丁 bacillum 小棒）"},
+  {"la": "Bacillus thuringiensis", "zh": "苏云金芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  thu·rin·GI·en·sis", "ph": "巴「西」鲁斯 图林「吉」恩西斯", "fe": "革兰阳性芽孢杆菌，芽孢期产生伴胞晶体（δ-内毒素 / Bt 毒素），对昆虫专一毒性。", "us": "微生物杀虫剂 Bt 制剂来源，广泛用于绿色生物防治。", "mn": "苏云金 → Bt 晶体毒素 → 杀虫；词源：thuringiensis＝图林根（德国地名）；Bacillus＝小杆菌（拉丁 bacillum 小棒）"},
+  {"la": "Bacillus licheniformis", "zh": "地衣芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  li·che·ni·FOR·mis", "ph": "巴「西」鲁斯 利凯尼「福」尔米斯", "fe": "革兰阳性芽孢杆菌，耐碱耐热，分泌碱性蛋白酶与杆菌肽。", "us": "工业化生产碱性蛋白酶（加酶洗衣粉用酶）、杆菌肽。", "mn": "地衣状 → 耐碱蛋白酶；词源：licheniformis＝地衣状的（lichen 地衣 + forma 形）；Bacillus＝小杆菌（拉丁 bacillum 小棒）"},
+  {"la": "Bacillus megaterium", "zh": "巨大芽孢杆菌", "g": "工业微生物", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  me·ga·TE·ri·um", "ph": "巴「西」鲁斯 梅加「泰」里乌姆", "fe": "革兰阳性大杆菌，能形成大型芽孢，好氧，胞内有异染颗粒。", "us": "VC 二步发酵中的伴生「大菌」：自身不产酸，其代谢物促进小菌产酸；也用于维生素、酶生产与芽孢形态研究。", "mn": "mega＝巨大；VC 发酵里的「大菌」陪跑员；词源：megaterium＝巨大生物（希腊 megas 大 + terion 生物）；Bacillus＝小杆菌（拉丁 bacillum 小棒）"},
+  {"la": "Bacillus cereus", "zh": "蜡样芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  ce·RE·us", "ph": "巴「西」鲁斯 塞「雷」乌斯", "fe": "革兰阳性芽孢杆菌，菌落呈蜡样，产生肠毒素。", "us": "可引起食物中毒；也是酶制剂与益生菌研究对象。", "mn": "cereus＝蜡样；隔夜饭的隐患；词源：Bacillus＝小杆菌（拉丁 bacillum 小棒）"},
+  {"la": "Lactobacillus", "zh": "乳杆菌属（乳酸杆菌）", "g": "其他G⁺杆菌", "tag": "G⁺无芽孢杆菌", "syl": "Lac·to·ba·CIL·lus", "ph": "拉克托巴「西」鲁斯", "fe": "革兰阳性无芽孢杆菌，厌氧或兼性厌氧，将糖发酵为乳酸。", "us": "酸奶、泡菜等乳酸发酵发酵剂；代表有植物、干酪、保加利亚乳杆菌。", "mn": "lacto＝乳酸；酸奶灵魂菌；词源：Lactobacillus＝乳酸小杆菌（lacto 乳 + bacillum 小棒）"},
+  {"la": "Lactobacillus bulgaricus", "zh": "保加利亚乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  bul·GA·ri·cus", "ph": "拉克托巴「西」鲁斯 布尔「加」里库斯", "fe": "革兰阳性杆菌，专性同型乳酸发酵，最适温度约 45 ℃。", "us": "酸奶（与嗜热链球菌共发酵）的核心菌种。", "mn": "保加利亚酸奶的命名菌；词源：bulgaricus＝保加利亚的；Lactobacillus＝乳酸小杆菌（lacto 乳 + bacillum 小棒）"},
+  {"la": "Lactobacillus plantarum", "zh": "植物乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  plan·TA·rum", "ph": "拉克托巴「西」鲁斯 普兰「塔」鲁姆", "fe": "革兰阳性杆菌，能发酵多种糖，耐酸，广泛存在于植物表面。", "us": "蔬菜、谷物发酵（酸菜、饲料青贮）常用发酵剂。", "mn": "plantarum＝植物；腌菜高手；词源：Lactobacillus＝乳酸小杆菌（lacto 乳 + bacillum 小棒）"},
+  {"la": "Lactobacillus casei", "zh": "干酪乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  CA·se·i", "ph": "拉克托巴「西」鲁斯 「卡」塞伊", "fe": "革兰阳性杆菌，耐酸耐胆盐，常见于发酵乳与肠道。", "us": "干酪发酵及益生菌制剂常用菌株。", "mn": "casei＝干酪；奶酪里的菌；词源：Lactobacillus＝乳酸小杆菌（lacto 乳 + bacillum 小棒）"},
+  {"la": "Streptococcus thermophilus", "zh": "嗜热链球菌", "g": "细菌", "tag": "G⁺球菌", "syl": "Strep·to·COC·cus  ther·mo·PHI·lus", "ph": "斯特雷普托「科」库斯 特莫「菲」鲁斯", "fe": "革兰阳性链球菌，最适温度约 40–45 ℃，同型乳酸发酵。", "us": "与保加利亚乳杆菌共发酵生产酸奶。", "mn": "thermo＝耐热；酸奶搭档；词源：thermophilus＝嗜热的（thermo 热 + philos 爱）；Streptococcus＝链状球菌（streptos 链 + coccus 球）"},
+  {"la": "Acetobacter aceti", "zh": "醋化醋酸杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·ce·to·BAC·ter  a·CE·ti", "ph": "阿塞托「巴」克特 阿「塞」蒂", "fe": "革兰阴性好氧杆菌，具乙醇/乙酸脱氢酶，把乙醇氧化为乙酸。", "us": "食醋酿造（醋酸发酵）的关键菌。", "mn": "aceti＝醋；酒变醋靠它；词源：Acetobacter＝醋酸杆菌（acetum 醋 + bacter 杆菌）"},
+  {"la": "Gluconobacter oxydans", "zh": "氧化葡萄糖酸杆菌", "g": "工业微生物", "tag": "G⁻杆菌", "syl": "Glu·co·no·BAC·ter  o·xy·DANS", "ph": "格卢科诺「巴」克特 奥克西「丹」斯", "fe": "革兰阴性专性需氧杆菌，氧化能力不完全：能把 L-山梨糖氧化为 2-酮基-L-古龙酸（2-KGA），不进一步利用。", "us": "维生素 C 二步发酵法第二步的「小菌」（产酸菌），与巨大芽孢杆菌（大菌）伴生发酵。", "mn": "氧化葡萄糖 → VC 第二步产 2-KGA；小菌不吃糖只产酸；词源：oxydans＝氧化的（oxy- 氧）；Gluconobacter＝葡萄糖酸杆菌（gluconic 葡萄糖酸 + bacter 杆菌）"},
+  {"la": "Corynebacterium glutamicum", "zh": "谷氨酸棒状杆菌", "g": "工业微生物", "tag": "G⁺棒状杆菌", "syl": "Co·ry·ne·bac·TE·ri·um  glu·ta·mi·CUM", "ph": "科里内巴克「泰」里乌姆 格卢塔米「库」姆", "fe": "革兰阳性不规则棒状杆菌，好氧，营养缺陷型育种的典型对象。", "us": "味精（谷氨酸钠）及赖氨酸等多种氨基酸发酵生产菌。", "mn": "glutamicum＝谷氨酸；味精工厂主力；词源：Corynebacterium＝棒状杆菌（希腊 koryne 棒）"},
+  {"la": "Brevibacterium flavum", "zh": "黄色短杆菌", "g": "工业微生物", "tag": "G⁺短杆菌", "syl": "Bre·vi·bac·TE·ri·um  FLA·vum", "ph": "布雷维巴克「泰」里乌姆 「弗」拉武姆", "fe": "革兰阳性短杆菌，常作氨基酸高产育种亲本。", "us": "赖氨酸、谷氨酸等氨基酸发酵的重要生产菌。", "mn": "brevis＝短；黄色短棒菌；词源：flavum＝黄色的（拉丁 flavus 黄）；Brevibacterium＝短杆菌（拉丁 brevis 短）"},
+  {"la": "Rhizobium", "zh": "根瘤菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Rhi·ZO·bi·um", "ph": "里「佐」比乌姆", "fe": "革兰阴性杆菌，与豆科植物共生形成根瘤，行固氮作用。", "us": "生物固氮、绿肥与豆科作物增产的核心微生物。", "mn": "rhizo＝根；根瘤固氮专家；词源：Rhizobium＝根瘤菌（rhiza 根 + bios 生命）"},
+  {"la": "Agrobacterium tumefaciens", "zh": "根癌土壤杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·gro·bac·TE·ri·um  tu·me·fa·CI·ens", "ph": "阿格罗巴克「泰」里乌姆 图梅法「西」恩斯", "fe": "革兰阴性杆菌，经 Ti 质粒将 DNA 转入植物引起冠瘿瘤。", "us": "Ti 质粒是植物基因工程的天然载体。", "mn": "tumefaciens＝致瘤；植物转基因载体；词源：Agrobacterium＝土壤杆菌（希腊 agros 田）"},
+  {"la": "Azotobacter", "zh": "固氮菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·zo·to·BAC·ter", "ph": "阿佐托「巴」克特", "fe": "革兰阴性大杆菌，好氧，自由生活能固定大气氮，胞内有 PHB 颗粒。", "us": "生物肥料、固氮研究与 PHB 可降解材料来源。", "mn": "azo＝氮；自由固氮好氧菌；词源：Azotobacter＝固氮菌（azoto 氮 + bacter 杆菌）"},
+  {"la": "Nitrobacter", "zh": "硝化杆菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Ni·tro·BAC·ter", "ph": "尼特罗「巴」克特", "fe": "革兰阴性小杆菌，化能自养，把亚硝酸氧化为硝酸获能。", "us": "土壤硝化作用（氮循环）的关键菌，污水生物脱氮用。", "mn": "nitro＝氮；硝化第二步；词源：Nitrobacter＝硝化杆菌（nitro 硝 + bacter 杆菌）"},
+  {"la": "Nitrosomonas", "zh": "亚硝化单胞菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Ni·tro·so·MO·nas", "ph": "尼特罗索「莫」纳斯", "fe": "革兰阴性杆菌，化能自养，把氨氧化为亚硝酸。", "us": "硝化作用第一步，与 Nitrobacter 共同完成硝化。", "mn": "nitroso＝亚硝；硝化第一步；词源：Nitrosomonas＝亚硝化单胞菌（nitroso 亚硝 + monas 单胞）"},
+  {"la": "Pseudomonas", "zh": "假单胞菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas", "ph": "普塞多「莫」纳斯", "fe": "革兰阴性杆菌，端生鞭毛，好氧，能降解多种有机物（广食性）。", "us": "环境污染物生物降解、污水处理的重要菌；部分为人畜病原菌。", "mn": "pseudo＝假；代谢全能选手；词源：Pseudomonas＝假单胞菌（pseudo 假 + monas 单胞）"},
+  {"la": "Pseudomonas fluorescens", "zh": "荧光假单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas  fluo·re·SCENS", "ph": "普塞多「莫」纳斯 弗洛雷「斯」岑斯", "fe": "革兰阴性杆菌，产荧光水溶性色素（绿脓菌素一类），好氧。", "us": "冷藏食品腐败常见菌；也用于生物防治与废水处理。", "mn": "fluorescens＝荧光；冷库里的光；词源：Pseudomonas＝假单胞菌（pseudo 假 + monas 单胞）"},
+  {"la": "Pseudomonas aeruginosa", "zh": "铜绿假单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas  ae·ru·gi·NO·sa", "ph": "普塞多「莫」纳斯 埃鲁吉「诺」萨", "fe": "革兰阴性杆菌，产青绿色绿脓菌素与荧光色素，条件致病。", "us": "医院常见机会致病菌；也用于酶与次生代谢物研究。", "mn": "aeruginosa＝铜绿；绿脓菌；词源：Pseudomonas＝假单胞菌（pseudo 假 + monas 单胞）"},
+  {"la": "Staphylococcus aureus", "zh": "金黄色葡萄球菌", "g": "G⁺球菌", "tag": "G⁺球菌", "syl": "Sta·phy·lo·COC·cus  AU·re·us", "ph": "斯塔菲洛「科」库斯 「奥」雷乌斯", "fe": "革兰阳性葡萄串状球菌，产金黄色色素，耐高盐，产肠毒素。", "us": "食品污染与化脓感染常见菌；也是酶/蛋白表达研究对象。", "mn": "aureus＝金色；葡萄串金球菌；词源：Staphylococcus＝葡萄串状球菌（staphyle 葡萄串 + coccus 球）"},
+  {"la": "Micrococcus", "zh": "微球菌（属）", "g": "细菌", "tag": "G⁺球菌", "syl": "Mi·cro·COC·cus", "ph": "米克罗「科」库斯", "fe": "革兰阳性小球菌，严格好氧，常分布于皮肤与空气尘埃。", "us": "常用于环境监测与某些氨基酸/酶生产。", "mn": "micros＝小；迷你球菌；词源：Micrococcus＝微球菌（micros 小 + coccus 球）"},
+  {"la": "Clostridium acetobutylicum", "zh": "丙酮丁醇梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  a·ce·to·bu·ty·LI·cum", "ph": "克洛斯特里「迪」乌姆 阿塞托布提「利」库姆", "fe": "革兰阳性大杆菌，严格厌氧，产芽孢，行丙酮-丁醇发酵。", "us": "工业丙酮丁醇（ABE）发酵经典菌种。", "mn": "acetobutylicum＝丙酮丁醇；ABE 发酵菌；词源：Clostridium＝梭菌（希腊 kloster 纺锤）"},
+  {"la": "Clostridium botulinum", "zh": "肉毒梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  bo·tu·LI·num", "ph": "克洛斯特里「迪」乌姆 博图「利」努姆", "fe": "革兰阳性厌氧芽孢杆菌，产肉毒毒素（最强神经毒素之一）。", "us": "罐头食品安全的重点防控对象；毒素也用于医药。", "mn": "botulinum＝香肠；罐头杀手；词源：Clostridium＝梭菌（希腊 kloster 纺锤）"},
+  {"la": "Clostridium tetani", "zh": "破伤风梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  te·TA·ni", "ph": "克洛斯特里「迪」乌姆 特「塔」尼", "fe": "革兰阳性厌氧芽孢杆菌，芽孢呈鼓槌状，产破伤风痉挛毒素。", "us": "深而窄伤口易致破伤风；类毒素用于疫苗。", "mn": "tetani＝强直；鼓槌芽孢菌；词源：Clostridium＝梭菌（希腊 kloster 纺锤）"},
+  {"la": "Desulfovibrio", "zh": "脱硫弧菌（属）", "g": "细菌", "tag": "G⁻厌氧", "syl": "De·sul·fo·VI·brio", "ph": "德斯尔福「维」布里奥", "fe": "革兰阴性弧形杆菌，严格厌氧，以硫酸盐为电子受体（ sulfate reduction）。", "us": "造成金属与混凝土管道的硫酸盐腐蚀；参与硫循环。", "mn": "desulfo＝脱硫；腐蚀管道菌；词源：Desulfovibrio＝脱硫弧菌（desulfo 脱硫 + vibrio 弧菌）"},
+  {"la": "Thiobacillus", "zh": "硫杆菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Thi·o·ba·CIL·lus", "ph": "希奥巴「西」鲁斯", "fe": "革兰阴性杆菌，氧化硫/硫代硫酸获能，化能自养。", "us": "矿石生物浸出（浸铜、浸铀）、脱硫研究用。", "mn": "thio＝硫；吃硫的菌；词源：Thiobacillus＝硫杆菌（thio 硫 + bacillus 杆菌）"},
+  {"la": "Zymomonas mobilis", "zh": "运动发酵单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Zy·mo·MO·nas  mo·BI·lis", "ph": "兹莫「莫」纳斯 莫「比」利斯", "fe": "革兰阴性杆菌，靠 ED 途径将糖高效发酵为乙醇。", "us": "潜在的高效乙醇发酵菌（比酵母理论得率高）。", "mn": "zymo＝发酵；酒精快产菌；词源：mobilis＝能运动的（拉丁 mobilis）；Zymomonas＝发酵单胞菌（zyme 发酵 + monas 单胞）"},
+  {"la": "Xanthomonas campestris", "zh": "野油菜黄单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Xan·tho·MO·nas  cam·pe·stris", "ph": "赞托「莫」纳斯 坎佩「斯」特里斯", "fe": "革兰阴性杆菌，产胞外多糖黄原胶（xanthan）。", "us": "工业黄原胶（食品增稠剂）的生产菌。", "mn": "xantho＝黄；黄原胶之母；词源：campestris＝田野的（拉丁 campus 田）；Xanthomonas＝黄单胞菌（xanthos 黄 + monas 单胞）"},
+  {"la": "Bifidobacterium", "zh": "双歧杆菌（属）", "g": "细菌", "tag": "G⁺厌氧", "syl": "Bi·fi·do·bac·TE·ri·um", "ph": "比菲多巴克「泰」里乌姆", "fe": "革兰阳性分叉杆菌，严格厌氧，母乳喂养婴儿肠道优势菌。", "us": "重要益生菌，调节肠道微生态、增强免疫。", "mn": "bifid＝两裂；肠道好菌；词源：Bifidobacterium＝双歧杆菌（bifidus 分叉）"},
+  {"la": "Propionibacterium", "zh": "丙酸杆菌（属）", "g": "细菌", "tag": "G⁺厌氧", "syl": "Pro·pi·o·ni·bac·TE·ri·um", "ph": "普罗皮奥尼巴克「泰」里乌姆", "fe": "革兰阳性多形态杆菌，厌氧，发酵产丙酸与乙酸。", "us": "瑞士干酪孔眼（产 CO₂/丙酸）与益生菌（痤疮丙酸杆菌）相关。", "mn": "propion＝丙酸；干酪孔眼菌；词源：Propionibacterium＝丙酸杆菌（propion 丙酸）"},
+  {"la": "Serratia marcescens", "zh": "粘质沙雷氏菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Ser·ra·ti·a  mar·ce·SCENS", "ph": "塞拉「提」亚 马尔塞「斯」岑斯", "fe": "革兰阴性杆菌，产红色灵菌素（prodigiosin）色素，常污染医院环境。", "us": "实验室与卫生指示菌；也产胞外酶与色素。", "mn": "marcescens＝腐败；红色污染菌；词源：Serratia＝纪念 Serrati"},
+  {"la": "Salmonella", "zh": "沙门氏菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Sal·mo·NEL·la", "ph": "萨尔莫「内」拉", "fe": "革兰阴性周毛杆菌，多数能运动，兼性厌氧，部分致食物中毒。", "us": "食物（蛋、肉）安全重点防控的人畜共患病原菌。", "mn": "沙门＝伤寒/肠炎；食品安全盯防菌；词源：Salmonella＝纪念 Salmon"},
+  {"la": "Streptomyces griseus", "zh": "灰色链霉菌", "g": "工业微生物", "tag": "放线菌", "syl": "Strep·to·MY·ces  gri·SE·us", "ph": "斯特雷普托「迈」塞斯 格里斯「塞」乌斯", "fe": "革兰阳性丝状放线菌，基内菌丝分支，产灰色气生孢子链。", "us": "产链霉素、灰霉素等抗生素；放线菌模式种。", "mn": "griseus＝灰；链霉素老家；词源：Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces aureofaciens", "zh": "金色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  au·re·o·FA·ci·ens", "ph": "斯特雷普托「迈」塞斯 奥雷奥「法」西恩斯", "fe": "革兰阳性丝状菌，产金黄色色素与四环素类抗生素。", "us": "金霉素（氯四环素）等四环素类的生产菌。", "mn": "aureus＝金；四环素来源；词源：aureofaciens＝产金色的（aureus 金 + faciens 产生）；Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces rimosus", "zh": "龟裂链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ri·MO·sus", "ph": "斯特雷普托「迈」塞斯 里「莫」苏斯", "fe": "革兰阳性丝状菌，菌落表面龟裂状，产土霉素。", "us": "氧四环素（土霉素）的生产菌。", "mn": "rimosus＝龟裂；土霉素菌；词源：Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces hygroscopicus", "zh": "吸水链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  hy·gro·sco·pi·CUS", "ph": "斯特雷普托「迈」塞斯 希格罗斯科皮「库」斯", "fe": "革兰阳性丝状菌，气生菌丝吸水状，产多种次生代谢物。", "us": "产春日霉素、雷帕霉素等，生物防治与医药用。", "mn": "hygroscopicus＝吸水；农药源菌；词源：Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Saccharopolyspora erythraea", "zh": "红霉素链霉菌（红霉糖多孢菌）", "g": "工业微生物", "tag": "放线菌", "syl": "Sa·ccha·ro·po·ly·SPO·ra  e·ry·thrae·a", "ph": "萨克哈罗波利「斯」波拉 埃里特雷「阿」", "fe": "原称红霉素链霉菌，革兰阳性丝状放线菌，产大环内酯。", "us": "红霉素等抗生素的生产菌。", "mn": "erythraea＝红；红霉素生产者；旧名 Streptomyces erythreus（红霉素链霉菌）；词源：Saccharopolyspora＝糖多孢菌（saccharo 糖 + poly 多 + spora 孢子）"},
+  {"la": "Streptomyces noursei", "zh": "诺尔斯链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  nour·SE·i", "ph": "斯特雷普托「迈」塞斯 努尔「塞」伊", "fe": "革兰阳性丝状菌，产制霉菌素等抗真菌抗生素。", "us": "多烯类抗生素（如制霉菌素）来源。", "mn": "诺尔斯；抗真菌抗生素；词源：noursei＝纪念 Nourse；Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces kanamyceticus", "zh": "卡那霉素链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ka·na·my·ce·TI·cus", "ph": "斯特雷普托「迈」塞斯 卡纳米塞「提」库斯", "fe": "革兰阳性丝状菌，产氨基糖苷类抗生素卡那霉素。", "us": "卡那霉素生产菌，用于抗感染与筛选标记。", "mn": "kanamycin；卡那霉素源；词源：kanamyceticus＝产卡那霉素的（kanamycin）；Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces venezuelae", "zh": "委内瑞拉链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ve·ne·zu·e·LAE", "ph": "斯特雷普托「迈」塞斯 韦内苏埃「莱」", "fe": "革兰阳性丝状菌，产氯霉素等。", "us": "氯霉素的发现与生产菌之一。", "mn": "venezuelae＝委内瑞拉；氯霉素源；词源：Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces albus", "zh": "白色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  AL·bus", "ph": "斯特雷普托「迈」塞斯 「阿」尔武斯", "fe": "革兰阳性丝状菌，气生菌丝白色，产多种抗生素。", "us": "产白色霉素等，抗生素筛选常见种。", "mn": "albus＝白；白孢子链霉；词源：Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Streptomyces lavendulae", "zh": "淡紫链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  la·ven·du·LAE", "ph": "斯特雷普托「迈」塞斯 拉文杜「莱」", "fe": "革兰阳性丝状菌，气生菌丝淡紫色，产链丝菌素等。", "us": "多种抗生素与活性物质的来源种。", "mn": "lavendulae＝薰衣草紫；紫孢子；词源：Streptomyces＝链霉菌（streptos 链 + mykes 真菌）"},
+  {"la": "Micromonospora", "zh": "小单孢菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Mi·cro·mo·NO·spo·ra", "ph": "米克罗莫「诺」斯波拉", "fe": "放线菌，菌丝无横隔，孢子单个着生于孢子梗顶端。", "us": "产庆大霉素等氨基糖苷类抗生素。", "mn": "micro＋mono＝小单孢；庆大霉素家；词源：Micromonospora＝小单孢菌（micro 小 + monas 单 + spora 孢）"},
+  {"la": "Nocardia", "zh": "诺卡氏菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "No·car·DI·a", "ph": "诺卡尔「迪」亚", "fe": "放线菌，菌丝易断裂成杆状，弱抗酸，部分致病。", "us": "产利福霉素等；也用于环境污染物降解。", "mn": "诺卡；分枝断裂菌；词源：Nocardia＝纪念 Nocard"},
+  {"la": "Frankia", "zh": "弗兰克氏菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Fran·KI·a", "ph": "弗兰「基」亚", "fe": "放线菌，与非豆科木本植物（如杨梅、沙棘）共生固氮。", "us": "非豆科植物的共生固氮菌，改良瘠薄土壤。", "mn": "Frank 命名；木本固氮菌；词源：Frankia＝纪念 Frank"},
+  {"la": "Thermoactinomyces", "zh": "高温放线菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Ther·mo·ac·ti·no·MY·ces", "ph": "特莫阿克蒂诺「迈」塞斯", "fe": "嗜热放线菌，形成耐高温芽孢，常存在于堆肥、土壤。", "us": "高温堆肥与高温酶研究的来源菌。", "mn": "thermo＋actinomyces＝耐热放线菌；词源：Thermoactinomyces＝高温放线菌（thermo 热 + actis 射线 + mykes 真菌）"},
+  {"la": "Methanobacterium", "zh": "甲烷杆菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·bac·TE·ri·um", "ph": "梅塔诺巴克「泰」里乌姆", "fe": "严格厌氧古菌，杆状，以 H₂/CO₂ 或甲酸产甲烷。", "us": "厌氧消化（沼气）产甲烷的核心功能菌。", "mn": "methano＝甲烷；沼气制造机；词源：Methanobacterium＝甲烷杆菌（methano 甲烷）"},
+  {"la": "Methanococcus", "zh": "甲烷球菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·COC·cus", "ph": "梅塔诺「科」库斯", "fe": "严格厌氧古菌，球状，产甲烷，多见于海底热液与厌氧环境。", "us": "厌氧消化与极端环境产甲烷研究。", "mn": "甲烷球菌；海底产气；词源：Methanococcus＝甲烷球菌（methano 甲烷 + coccus 球）"},
+  {"la": "Methanosarcina", "zh": "甲烷八叠球菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·sar·CI·na", "ph": "梅塔诺萨尔「奇」纳", "fe": "严格厌氧古菌，可呈八叠球状，底物利用最广的产甲烷菌。", "us": "厌氧消化中转化乙酸/甲醇为甲烷的关键菌。", "mn": "sarcina＝八叠；最全能产甲烷菌；词源：Methanosarcina＝甲烷八叠球菌（sarcina 八叠包）"},
+  {"la": "Halobacterium", "zh": "嗜盐杆菌（属）", "g": "古菌", "tag": "极端嗜盐古菌", "syl": "Ha·lo·bac·TE·ri·um", "ph": "哈洛巴克「泰」里乌姆", "fe": "极端嗜盐古菌，需高盐（~3.5 M NaCl）才能生长，膜含细菌视紫红质。", "us": "盐湖、盐场微生物；菌紫质用于光合蛋白与生物电子研究。", "mn": "halo＝盐；紫膜盐菌；词源：Halobacterium＝嗜盐杆菌（halo 盐）"},
+  {"la": "Halococcus", "zh": "嗜盐球菌（属）", "g": "古菌", "tag": "极端嗜盐古菌", "syl": "Ha·lo·COC·cus", "ph": "哈洛「科」库斯", "fe": "极端嗜盐古菌，球状，具厚细胞壁抗高渗，常与嗜盐杆菌共生。", "us": "高盐环境（盐田、咸水湖）微生物群落成员。", "mn": "盐球菌；盐里的小球；词源：Halococcus＝嗜盐球菌（halo 盐 + coccus 球）"},
+  {"la": "Sulfolobus", "zh": "硫化叶菌（属）", "g": "古菌", "tag": "嗜热嗜酸古菌", "syl": "Sul·fo·LO·bus", "ph": "萨尔福「洛」武斯", "fe": "嗜热嗜酸古菌，叶状不规则细胞，氧化硫，最适 ~70–80 ℃、pH~2–3。", "us": "高温酸矿浸出（浸铜、浸铀）与环境修复用。", "mn": "sulfo＋lobus＝硫叶；热酸吃硫菌；词源：Sulfolobus＝硫化叶菌（sulfo 硫 + lobus 叶）"},
+  {"la": "Thermoplasma", "zh": "热原体（属）", "g": "古菌", "tag": "嗜热嗜酸古菌", "syl": "Ther·mo·PLAS·ma", "ph": "特莫「普」拉斯马", "fe": "嗜热嗜酸古菌，无细胞壁，具细胞膜（非肽聚糖），~55–60 ℃、pH~2。", "us": "极端环境微生物膜结构与进化研究模式。", "mn": "thermo＋plasma＝热原体；无壁热菌；词源：Thermoplasma＝热原体（thermo 热 + plasma 塑成物）"},
+  {"la": "Thermococcus", "zh": "热球菌（属）", "g": "古菌", "tag": "超嗜热古菌", "syl": "Ther·mo·COC·cus", "ph": "特莫「科」库斯", "fe": "超嗜热古菌，球状，严格厌氧，产 H₂，生于海底热液口（~85 ℃）。", "us": "极端酶（热稳定酶）的重要来源。", "mn": "热球菌；海底热泉菌；词源：Thermococcus＝热球菌（thermo 热）"},
+  {"la": "Pyrococcus", "zh": "高温球菌（属）", "g": "古菌", "tag": "超嗜热古菌", "syl": "Py·ro·COC·cus", "ph": "皮罗「科」库斯", "fe": "超嗜热古菌，球状，严格厌氧，最适 ~100 ℃，产 H₂ 与 CO₂。", "us": "超耐热 DNA 聚合酶等工业酶的热门来源。", "mn": "pyro＝火；近沸水球菌；词源：Pyrococcus＝火球菌（pyro 火）"},
+  {"la": "Anabaena", "zh": "鱼腥藻（属）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "A·na·BAE·na", "ph": "阿纳「贝」纳", "fe": "丝状蓝细菌，有异形胞（固氮），能行产氧光合与固氮。", "us": "稻田生物固氮（满江红共生）与水体氮循环。", "mn": "鱼腥味；异形胞固氮；词源：Anabaena＝鱼腥藻（希腊 anabainein 上升）"},
+  {"la": "Nostoc", "zh": "念珠藻（属）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "NO·stoc", "ph": "「诺」斯托克", "fe": "丝状蓝细菌，球形细胞串成念珠状，有异形胞固氮。", "us": "发菜、葛仙米等可食；固氮与水土保持。", "mn": "念珠串；发菜本体；词源：Nostoc＝念珠藻（古拉丁名）"},
+  {"la": "Nostoc flagelliforme", "zh": "发菜（念珠藻）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "NO·stoc  fla·gel·li·FOR·me", "ph": "「诺」斯托克 弗拉盖利「福」尔梅", "fe": "念珠藻的一种，丝体毛发状，耐旱，生于干旱草原。", "us": "名贵食用蓝藻（发菜）；生态固沙重要。", "mn": "发状菜；固沙又好吃；词源：flagelliforme＝鞭毛状/发状的（flagellum 鞭毛 + forma 形）；Nostoc＝念珠藻（古拉丁名）"},
+  {"la": "Oscillatoria", "zh": "颤藻（属）", "g": "蓝细菌", "tag": "丝状蓝藻", "syl": "O·scil·la·TO·ri·a", "ph": "奥西拉「托」里亚", "fe": "丝状蓝细菌，无鞘，靠滑行使藻丝颤动摆动。", "us": "池塘水华常见，部分产微囊藻毒素类似物。", "mn": "oscilla＝摆动；会抖的丝；词源：Oscillatoria＝颤藻（拉丁 oscillare 摆动）"},
+  {"la": "Lyngbya", "zh": "鞘丝藻（属）", "g": "蓝细菌", "tag": "丝状蓝藻", "syl": "Lyng·BY·a", "ph": "林「比」亚", "fe": "丝状蓝细菌，藻丝外具明显胶鞘，常成团块。", "us": "热带海域成害（海草病），也产活性肽。", "mn": "鞘外有衣；礁石上的丝；词源：Lyngbya＝纪念 Lyngbye"},
+  {"la": "Spirulina", "zh": "螺旋藻（属）", "g": "蓝细菌", "tag": "螺旋蓝藻", "syl": "Spi·ru·LI·na", "ph": "斯皮鲁「利」纳", "fe": "螺旋状蓝细菌，无异形胞但能固氮，蛋白含量高。", "us": "高蛋白保健食品（钝顶、极大螺旋藻）与饲料。", "mn": "spiral＝螺旋；蛋白藻；词源：Spirulina＝螺旋藻（拉丁 spira 螺旋）"},
+  {"la": "Microcystis", "zh": "微囊藻（属）", "g": "蓝细菌", "tag": "球状蓝藻", "syl": "Mi·cro·CYS·tis", "ph": "米克罗「西斯」蒂斯", "fe": "球状蓝细菌，群集成囊状，富营养水体易暴发水华。", "us": "产微囊藻毒素，饮用水安全重点监控对象。", "mn": "micro＋cyst＝微囊；水华毒藻；词源：Microcystis＝微囊藻（micro 小 + cystis 囊）"},
+  {"la": "Synechococcus", "zh": "聚球藻（属）", "g": "蓝细菌", "tag": "单细胞蓝藻", "syl": "Sy·ne·cho·COC·cus", "ph": "西内科「科」库斯", "fe": "单细胞蓝细菌，海洋与淡水广布，是海洋初级生产力主力。", "us": "海洋碳循环与光合固碳重要参与者。", "mn": "syn＋coccus＝聚球；海洋小蓝点；词源：Synechococcus＝聚球藻（syn 相连 + coccus 球）"},
+  {"la": "Prochlorococcus", "zh": "原绿球藻（属）", "g": "蓝细菌", "tag": "单细胞蓝藻", "syl": "Pro·chlo·ro·COC·cus", "ph": "普罗克洛罗「科」库斯", "fe": "极小的光合蓝细菌，含叶绿素 a/b 类似物，海洋最丰富的光合生物。", "us": "全球海洋固碳与产氧的关键微型生产者。", "mn": "原绿；海洋最微小的光合者；词源：Prochlorococcus＝原绿球藻（pro 原 + chloros 绿）"},
+  {"la": "Saccharomyces cerevisiae", "zh": "酿酒酵母", "g": "酵母菌", "tag": "芽殖酵母", "syl": "Sa·cca·ro·my·CES  ce·re·VI·siae", "ph": "萨克哈罗米「塞」斯 塞雷「维」西埃", "fe": "单细胞芽殖真菌，兼性厌氧，发酵糖产乙醇与 CO₂，模式真核。", "us": "酿酒、面包发酵与真核分子生物学研究的核心。", "mn": "cerevisiae＝啤酒；酵母之王；词源：Saccharomyces＝糖真菌（saccharon 糖 + mykes 真菌）"},
+  {"la": "Saccharomyces pastorianus", "zh": "卡尔酵母（下面酵母）", "g": "酵母菌", "tag": "芽殖酵母", "syl": "Sa·cca·ro·my·CES  pas·to·ri·A·nus", "ph": "萨克哈罗米「塞」斯 帕斯托里「阿」努斯", "fe": "低温下发酵的酿酒酵母近缘种，沉于底部（下面发酵）。", "us": "拉格啤酒（下面发酵啤酒）酿造用酵母。", "mn": "pastorianus；拉格啤酒酵母；词源：pastorianus＝纪念巴斯德（Pasteur）；Saccharomyces＝糖真菌（saccharon 糖 + mykes 真菌）"},
+  {"la": "Saccharomyces rouxii", "zh": "鲁氏酵母", "g": "酵母菌", "tag": "耐高渗酵母", "syl": "Sa·cca·ro·my·CES  rou·XI·i", "ph": "萨克哈罗米「塞」斯 鲁「克」西伊", "fe": "耐高渗酵母，能在高盐/高糖环境生长并产风味。", "us": "酱油、豆酱等高盐发酵的重要菌种。", "mn": "鲁氏；酱园里的耐盐酵母；词源：rouxii＝纪念 Roux；Saccharomyces＝糖真菌（saccharon 糖 + mykes 真菌）"},
+  {"la": "Schizosaccharomyces pombe", "zh": "粟酒裂殖酵母", "g": "酵母菌", "tag": "裂殖酵母", "syl": "Schi·zo·sa·ccha·ro·my·CES  POM·be", "ph": "希佐萨克哈罗米「塞」斯 「庞」贝", "fe": "以裂殖（一分为二）繁殖的酵母，细胞杆状，真核模式之二。", "us": "细胞周期与染色体研究的重要模式生物。", "mn": "pombe＝粟酒；裂殖模式菌；词源：Schizosaccharomyces＝裂殖糖酵母（schizein 裂开）"},
+  {"la": "Candida utilis", "zh": "产朊假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  u·ti·LIS", "ph": "坎迪「达」 乌蒂「利」斯", "fe": "假丝酵母，能同化多种糖与无机氮，蛋白含量高。", "us": "单细胞蛋白（SCP）与饲料蛋白生产菌。", "mn": "utilis＝有用；蛋白饲料菌；词源：Candida＝假丝酵母（拉丁 candidus 白）"},
+  {"la": "Candida tropicalis", "zh": "热带假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  tro·pi·CA·lis", "ph": "坎迪「达」 特罗皮「卡」利斯", "fe": "假丝酵母，能利用烷烃/油脂生长，适应性强。", "us": "石油蛋白、长链二元酸发酵及环境修复用。", "mn": "热带；吃油的酵母；词源：tropicalis＝热带的（希腊 tropikos）；Candida＝假丝酵母（拉丁 candidus 白）"},
+  {"la": "Candida albicans", "zh": "白色假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  al·bi·CANS", "ph": "坎迪「达」 阿尔比「坎」斯", "fe": "人体正常菌群之一，条件致病时可致念珠菌感染。", "us": "医药与微生物学研究的致病酵母模型。", "mn": "albicans＝白；鹅口疮元凶；词源：Candida＝假丝酵母（拉丁 candidus 白）"},
+  {"la": "Pichia pastoris", "zh": "巴斯德毕赤酵母", "g": "酵母菌", "tag": "甲醇酵母", "syl": "Pi·chi·a  pas·to·ris", "ph": "皮「奇」亚 帕斯「托」里斯", "fe": "甲基营养酵母，以甲醇为唯一碳源，强启动子宜表达外源蛋白。", "us": "重组蛋白（疫苗、酶）高效表达的工程宿主。", "mn": "毕赤；蛋白表达工厂；词源：pastoris＝牧师的（拉丁 pastor 牧人）；Pichia＝毕赤酵母（纪念 Pich）"},
+  {"la": "Kluyveromyces marxianus", "zh": "马克思克鲁维酵母", "g": "酵母菌", "tag": "克鲁维酵母", "syl": "Kluy·ve·ro·my·CES  mar·xi·A·nus", "ph": "克卢维罗米「塞」斯 马克西「阿」努斯", "fe": "克鲁维酵母，能发酵乳糖，耐热，生长快。", "us": "乳清（乳糖）利用、乳糖酶与单细胞蛋白生产。", "mn": "克鲁维；吃乳糖的酵母；词源：marxianus＝纪念真菌学家 Marx；Kluyveromyces＝克鲁维酵母（纪念 Kluyver）"},
+  {"la": "Kluyveromyces lactis", "zh": "乳酸克鲁维酵母", "g": "酵母菌", "tag": "克鲁维酵母", "syl": "Kluy·ve·ro·my·CES  LAC·tis", "ph": "克卢维罗米「塞」斯 「拉」克蒂斯", "fe": "克鲁维酵母，能发酵乳糖，常用于异源蛋白表达。", "us": "乳清转化与食品酶（乳糖酶）生产。", "mn": "lactis＝乳；乳清利用菌；词源：Kluyveromyces＝克鲁维酵母（纪念 Kluyver）"},
+  {"la": "Hansenula polymorpha", "zh": "多形汉逊酵母", "g": "酵母菌", "tag": "甲醇酵母", "syl": "Han·se·nu·la  po·ly·MOR·pha", "ph": "汉塞「努」拉 波利「莫」尔法", "fe": "甲基营养酵母，细胞多形，强甲醇启动子利于蛋白表达。", "us": "重组蛋白与单细胞蛋白生产的工程酵母。", "mn": "多形；甲醇蛋白工厂；词源：Hansenula＝汉逊酵母（纪念 Hansen）"},
+  {"la": "Torulopsis（Candida）glabrata", "zh": "光滑球拟酵母", "g": "酵母菌", "tag": "球拟酵母", "syl": "Tor·u·lop·sis  gla·BRA·ta", "ph": "托鲁洛「普」西斯 格拉「布拉」塔", "fe": "小型酵母，常作 Candida glabrata，条件致病。", "us": "医院环境中常见的机会致病酵母。", "mn": "光滑；机会致病菌；词源：glabrata＝光滑的（拉丁 glaber 无毛）；Torulopsis＝小串珠状（torulus 小串珠 + opsis 状），现归入 Candida"},
+  {"la": "Rhodotorula", "zh": "红酵母（属）", "g": "酵母菌", "tag": "红酵母", "syl": "Rho·do·to·ru·LA", "ph": "罗多托鲁「拉」", "fe": "产类胡萝卜素使菌落呈红/橙色的酵母，好氧。", "us": "类胡萝卜素（天然色素）生产与油脂积累研究。", "mn": "rhodo＝红；胡萝卜素红菌；词源：Rhodotorula＝红酵母（rhodo 红）"},
+  {"la": "Debaryomyces", "zh": "德巴利酵母（属）", "g": "酵母菌", "tag": "德巴利酵母", "syl": "De·ba·ry·o·my·CES", "ph": "德巴里奥米「塞」斯", "fe": "耐盐耐硝化的酵母，常见于腌制品与高盐环境。", "us": "发酵食品（香肠、酱油）风味与防腐相关。", "mn": "德巴利；腌货里的酵母；词源：Debaryomyces＝德巴利酵母（纪念 de Bary）"},
+  {"la": "Cryptococcus", "zh": "隐球酵母（属）", "g": "酵母菌", "tag": "隐球酵母", "syl": "Cryp·to·COC·cus", "ph": "克里普托「科」库斯", "fe": "具荚膜的酵母，代表种新型隐球菌为机会致病菌。", "us": "医学真菌学与荚膜机制研究对象。", "mn": "crypto＝隐藏；荚膜酵母；词源：Cryptococcus＝隐球酵母（crypto 隐）"},
+  {"la": "Yarrowia lipolytica", "zh": "解脂耶氏酵母", "g": "酵母菌", "tag": "解脂酵母", "syl": "Yar·ro·wi·a  li·po·LY·ti·ca", "ph": "亚罗「维」亚 利波利「提」卡", "fe": "能大量分泌脂肪酶/蛋白酶、同化烃类的酵母。", "us": "油脂化工、酶制剂与单细胞蛋白生产。", "mn": "lipolytica＝解脂；吃油的菌；词源：Yarrowia＝耶氏酵母（纪念 Yarrow）"},
+  {"la": "Zygosaccharomyces rouxii", "zh": "鲁氏接合酵母", "g": "酵母菌", "tag": "接合酵母", "syl": "Zy·go·sa·ccha·ro·my·CES  rou·XI·i", "ph": "兹戈萨克哈罗米「塞」斯 鲁「克」西伊", "fe": "耐高渗、耐盐的接合酵母，产酱香风味。", "us": "酱油、味噌等传统高盐发酵的核心酵母。", "mn": "zygo＝接合；酱香之源；词源：rouxii＝纪念 Roux；Zygosaccharomyces＝接合糖酵母（zygo 接合）"},
+  {"la": "Brettanomyces", "zh": "酒香酵母（属）", "g": "酵母菌", "tag": "酒香酵母", "syl": "Bret·ta·no·my·CES", "ph": "布雷塔诺米「塞」斯", "fe": "产四氢吡喃类香气的酵母，葡萄酒/啤酒中可增香或致劣。", "us": "精酿啤酒与葡萄酒风味（马厩香）相关菌。", "mn": "brett；酒里的香与臭；词源：Brettanomyces＝酒香酵母（Brett 英国酿酒商）"},
+  {"la": "Aspergillus niger", "zh": "黑曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  NI·ger", "ph": "阿斯佩尔「吉」鲁斯 「尼」杰尔", "fe": "丝状真菌，分生孢子头黑色，好氧，产大量有机酸与酶。", "us": "柠檬酸、葡萄糖酸发酵与糖化酶、纤维素酶生产。", "mn": "黑孢子；柠檬酸大王；词源：niger＝黑色的（拉丁 niger 黑）；Aspergillus＝曲霉（aspergillum 圣水洒）"},
+  {"la": "Aspergillus oryzae", "zh": "米曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  o·RY·zae", "ph": "阿斯佩尔「吉」鲁斯 奥「里」泽", "fe": "丝状真菌，分生孢子黄绿色，富含蛋白酶与淀粉酶。", "us": "酱油、味噌、清酒酿造的「国菌」（日本）。", "mn": "oryzae＝米；酱曲之魂；词源：Aspergillus＝曲霉（aspergillum 圣水洒）"},
+  {"la": "Aspergillus flavus", "zh": "黄曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  FLA·vus", "ph": "阿斯佩尔「吉」鲁斯 「弗」拉武斯", "fe": "丝状真菌，分生孢子黄绿色，在霉变花生/玉米上产黄曲霉毒素。", "us": "食品安全重点监控；产毒与致癌研究模型。", "mn": "flavus＝黄；剧毒黄曲霉毒素；词源：Aspergillus＝曲霉（aspergillum 圣水洒）"},
+  {"la": "Aspergillus nidulans", "zh": "构巢曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  ni·du·LANS", "ph": "阿斯佩尔「吉」鲁斯 尼杜「兰」斯", "fe": "丝状真菌，分生孢子绿/黄色，遗传背景清晰。", "us": "真菌遗传学与次级代谢调控的模式生物。", "mn": "构巢；遗传模式霉；词源：nidulans＝结巢的（拉丁 nidus 巢）；Aspergillus＝曲霉（aspergillum 圣水洒）"},
+  {"la": "Aspergillus terreus", "zh": "土曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  TER·re·us", "ph": "阿斯佩尔「吉」鲁斯 「泰」雷乌斯", "fe": "丝状真菌，分生孢子土黄色，产洛伐他汀等。", "us": " statin 类降脂药（洛伐他汀）的生产菌。", "mn": "土色；降脂药源；词源：terreus＝土色的（拉丁 terra 土）；Aspergillus＝曲霉（aspergillum 圣水洒）"},
+  {"la": "Penicillium chrysogenum", "zh": "产黄青霉", "g": "工业微生物", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  chry·so·GE·num", "ph": "佩尼西利「乌」姆 克吕索「盖」努姆", "fe": "丝状真菌，青绿色分生孢子，产青霉素。", "us": "青霉素（首个抗生素）的工业高产菌种。", "mn": "chrysogenum＝产金；青霉素母机；词源：Penicillium＝青霉（penicillus 画笔）"},
+  {"la": "Penicillium citrinum", "zh": "桔青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ci·TRI·num", "ph": "佩尼西利「乌」姆 西「特里」努姆", "fe": "丝状真菌，桔黄色分生孢子，产桔青霉素。", "us": "霉变大米常见菌，产肾毒素；也用于核酸生产。", "mn": "citrinum＝桔黄；霉米毒素菌；词源：Penicillium＝青霉（penicillus 画笔）"},
+  {"la": "Penicillium camemberti", "zh": "卡门柏青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ca·mem·BER·ti", "ph": "佩尼西利「乌」姆 卡芒「贝」尔蒂", "fe": "丝状真菌，白色柔毛状，分解脂肪与蛋白产香。", "us": "软质干酪（卡门贝尔、布里）表面熟成菌。", "mn": "卡门贝尔；奶酪白毛；词源：camemberti＝卡门贝尔（法国地名）；Penicillium＝青霉（penicillus 画笔）"},
+  {"la": "Penicillium roqueforti", "zh": "娄地青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ro·que·FOR·ti", "ph": "佩尼西利「乌」姆 罗克福「尔」蒂", "fe": "丝状真菌，蓝绿色孢子，耐氧低，产风味与青霉香。", "us": "蓝纹干酪（洛克福）内部的呈香霉菌。", "mn": "蓝纹奶酪之心；词源：roqueforti＝罗克福（法国地名）；Penicillium＝青霉（penicillus 画笔）"},
+  {"la": "Penicillium expansum", "zh": "扩展青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ex·pan·SUM", "ph": "佩尼西利「乌」姆 埃克斯潘「苏」姆", "fe": "丝状真菌，侵害苹果等水果，产展青霉素。", "us": "贮藏水果腐烂与毒素（展青霉素）监控对象。", "mn": "扩展；烂苹果霉；词源：expansum＝扩展的（拉丁 expandere 展开）；Penicillium＝青霉（penicillus 画笔）"},
+  {"la": "Rhizopus oryzae", "zh": "米根霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Rhi·zo·PUS  o·RY·zae", "ph": "里佐「普」斯 奥「里」泽", "fe": "丝状真菌，假根状菌丝、黑色孢子囊，糖化力强。", "us": "米酒/甜酒曲、乳酸与糖化酶（根霉淀粉酶）生产。", "mn": "根霉；酒曲糖化菌；词源：oryzae＝稻米的（拉丁 oryza 稻）；Rhizopus＝根霉（rhiza 根 + pus 足）"},
+  {"la": "Rhizopus stolonifer", "zh": "黑根霉（匍枝根霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Rhi·zo·PUS  sto·lo·ni·FER", "ph": "里佐「普」斯 斯托洛尼「费」尔", "fe": "丝状真菌，匍匐菌丝、黑色毛状霉，常见于面包。", "us": "面包/果蔬腐生霉，也是接合生殖教学材料。", "mn": "黑面包霉；接合生殖范例；词源：stolonifer＝具匍匐枝的（stolo 匍枝 + ferre 带）；Rhizopus＝根霉（rhiza 根 + pus 足）"},
+  {"la": "Mucor racemosus", "zh": "总状毛霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Mu·COR  ra·ce·MO·sus", "ph": "穆「科」尔 拉塞「莫」苏斯", "fe": "丝状真菌，无隔菌丝，白色絮状，产孢子囊。", "us": "腐生霉；传统腐乳（毛豆腐）发酵菌种之一。", "mn": "毛霉；腐乳白毛菌；词源：racemosus＝总状的（拉丁 racemus 葡萄串）；Mucor＝毛霉（拉丁 mucor 霉）"},
+  {"la": "Mucor mucedo", "zh": "大毛霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Mu·COR  mu·CE·do", "ph": "穆「科」尔 穆「塞」多", "fe": "丝状真菌，生长迅速，大型孢子囊，常见于土壤粪便。", "us": "土壤腐生霉，常与根霉混淆的教学种。", "mn": "大毛霉；土里的大霉；词源：mucedo＝霉的（拉丁 mucor 霉）；Mucor＝毛霉（拉丁 mucor 霉）"},
+  {"la": "Neurospora crassa", "zh": "粗糙脉孢菌（红色面包霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Neu·ro·SPO·ra  CRAS·sa", "ph": "神经罗「斯」波拉 「克」拉斯萨", "fe": "丝状真菌，子囊孢子红色，有性/无性世代清晰。", "us": "真菌遗传学（一基因一酶）经典模式生物。", "mn": "脉孢；红色面包霉模式；词源：crassa＝厚的、粗糙的（拉丁 crassus）；Neurospora＝脉孢菌（neuron 脉 + spora 孢）"},
+  {"la": "Trichoderma reesei", "zh": "里氏木霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Tri·cho·DER·ma  ree·SE·i", "ph": "特里科「德」尔马 雷「塞」伊", "fe": "丝状真菌，绿色分生孢子，分泌极强纤维素酶系。", "us": "纤维素酶（纺织、饲料、生物质糖化）主力生产菌。", "mn": "木霉；纤维素酶工厂；词源：reesei＝纪念 Reese；Trichoderma＝木霉（thrix 毛 + derma 皮）"},
+  {"la": "Trichoderma viride", "zh": "绿色木霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Tri·cho·DER·ma  VI·ri·de", "ph": "特里科「德」尔马 「维」里德", "fe": "丝状真菌，绿色分生孢子，产木霉素与纤维素酶。", "us": "生物防治（拮抗病原菌）与酶生产用。", "mn": "viride＝绿；生防绿霉；词源：Trichoderma＝木霉（thrix 毛 + derma 皮）"},
+  {"la": "Monascus purpureus", "zh": "红曲霉（紫色红曲霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Mo·nas·cus  pur·PU·re·us", "ph": "莫「纳」斯库斯 普尔普「雷」乌斯", "fe": "丝状真菌，产红/紫色色素（红曲色素）与莫纳可林 K。", "us": "红曲米（红糟）、降脂功能成分与食品着色。", "mn": "红曲；东方红酵；词源：purpureus＝紫色的（拉丁 purpura 紫）；Monascus＝红曲霉（mono 单 + ascus 子囊）"},
+  {"la": "Fusarium graminearum", "zh": "禾谷镰刀菌", "g": "霉菌", "tag": "丝状真菌", "syl": "Fu·sa·ri·UM  gra·mi·ne·A·rum", "ph": "富萨里「乌」姆 格拉米内「阿」鲁姆", "fe": "丝状真菌，镰刀形大孢子，侵害小麦玉米产呕吐毒素。", "us": "粮谷赤霉病与镰刀菌毒素（DON）防控对象。", "mn": "镰刀；麦穗毒霉；词源：graminearum＝禾本科的（拉丁 gramen 草）；Fusarium＝镰刀菌（拉丁 fusus 纺锤）"},
+  {"la": "Fusarium oxysporum", "zh": "尖镰孢菌", "g": "霉菌", "tag": "丝状真菌", "syl": "Fu·sa·ri·UM  o·xy·SPO·rum", "ph": "富萨里「乌」姆 奥克西「斯」波鲁姆", "fe": "丝状真菌，镰刀形孢子，多种专化型致植物枯萎病。", "us": "作物土传枯萎病病原与生物防治研究。", "mn": "尖镰；植物枯萎病源；词源：oxysporum＝尖孢的（oxys 尖 + spora 孢子）；Fusarium＝镰刀菌（拉丁 fusus 纺锤）"},
+  {"la": "Botrytis cinerea", "zh": "灰葡萄孢（灰霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Bo·try·tis  ci·ne·RE·a", "ph": "博特「里」蒂斯 西内「雷」阿", "fe": "丝状真菌，灰色霉层，侵害果蔬（灰霉病），也能贵腐。", "us": "葡萄贵腐酒（贵腐菌）与果蔬采后病害双重角色。", "mn": "灰霉；贵腐亦病害；词源：cinerea＝灰色的（拉丁 cinis 灰）；Botrytis＝葡萄孢（希腊 botrys 葡萄串）"},
+  {"la": "Geotrichum candidum", "zh": "白地霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Geo·tri·chum  can·DI·dum", "ph": "格奥特里「库」姆 坎「迪」杜姆", "fe": "裂殖酵母状霉菌，形成关节孢子，分解蛋白脂肪。", "us": "干酪（如卡门贝尔）表面熟成与风味菌。", "mn": "白地霉；奶酪风味菌；词源：candidum＝纯白的（拉丁 candidus）；Geotrichum＝地霉（geo 土 + thrix 毛）"},
+  {"la": "Aureobasidium pullulans", "zh": "出芽短梗霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Au·re·o·ba·si·di·UM  pul·lu·LANS", "ph": "奥雷奥巴西迪「乌」姆 普卢卢「兰」斯", "fe": "黑酵母状真菌，出芽繁殖，产普鲁兰多糖。", "us": "普鲁兰（pullulan）食品胶与生物被膜研究。", "mn": "出芽短梗；普鲁兰胶源；词源：pullulans＝出芽的（拉丁 pullulare 出芽）；Aureobasidium＝短梗霉（aureus 金 + basidium 担子）"},
+  {"la": "Cladosporium", "zh": "枝孢霉（属）", "g": "霉菌", "tag": "丝状真菌", "syl": "Cla·do·SPO·ri·um", "ph": "克拉多「斯」波里乌姆", "fe": "丝状真菌，橄榄色分生孢子链，广泛分布于空气植物。", "us": "常见空气过敏原与果蔬表面腐生霉。", "mn": "枝孢；空气中的黑霉；词源：Cladosporium＝枝孢霉（希腊 klados 枝）"},
+  {"la": "Agaricus bisporus", "zh": "双孢蘑菇（洋菇）", "g": "担子菌", "tag": "食用菌", "syl": "A·ga·ri·cus  bi·SPO·rus", "ph": "阿加里「库」斯 比「斯」波鲁斯", "fe": "伞菌，菌褶褐色，担子上多为双核孢子，世界栽培最广。", "us": "商业化栽培最多的食用菌（白蘑菇、褐菇）。", "mn": "双孢；超市洋菇；词源：bisporus＝双孢的（bi- 二 + spora 孢子）；Agaricus＝蘑菇（希腊 agarikon）"},
+  {"la": "Lentinula edodes", "zh": "香菇", "g": "担子菌", "tag": "食用菌", "syl": "Len·ti·nu·la  e·DO·tes", "ph": "伦蒂努「拉」 埃「多」特斯", "fe": "伞菌，菌盖有鳞片，木腐生，担孢子无色。", "us": "东亚最重要的栽培食用菌，含香菇多糖。", "mn": "edodes＝可食；香蕈之王；词源：Lentinula＝小香菇（lentinus 韧）"},
+  {"la": "Pleurotus ostreatus", "zh": "平菇（糙皮侧耳）", "g": "担子菌", "tag": "食用菌", "syl": "Pleu·ro·tus  os·tre·A·tus", "ph": "普勒罗「图」斯 奥斯特雷「阿」图斯", "fe": "侧耳属，菌盖呈贝壳状、侧生，木屑基质易栽培。", "us": "大宗栽培食用菌，粗放易种（平菇）。", "mn": "ostreatus＝牡蛎；蚝菇；词源：Pleurotus＝侧耳（pleuron 侧）"},
+  {"la": "Pleurotus eryngii", "zh": "杏鲍菇", "g": "担子菌", "tag": "食用菌", "syl": "Pleu·ro·tus  e·ryn·GII", "ph": "普勒罗「图」斯 埃林「吉」伊", "fe": "侧耳属，肉质子实体粗大，具杏仁香。", "us": "广栽培的优质食用菌（杏鲍菇）。", "mn": "杏鲍；鲍鱼口感菇；词源：Pleurotus＝侧耳（pleuron 侧）"},
+  {"la": "Flammulina velutipes", "zh": "金针菇", "g": "担子菌", "tag": "食用菌", "syl": "Flam·mu·li·na  ve·lu·TI·pes", "ph": "弗拉穆利「纳」 韦卢「提」佩斯", "fe": "伞菌，菌柄细长金黄，低温出菇。", "us": "常见栽培食用菌（金针菇），火锅常客。", "mn": "velutipes＝天鹅绒柄；金针菇；词源：Flammulina＝金针菇（flammeus 火焰色）"},
+  {"la": "Hypsizygus marmoreus", "zh": "真姬菇（蟹味菇）", "g": "担子菌", "tag": "食用菌", "syl": "Hyp·si·zy·gus  mar·mo·RE·us", "ph": "希普西「齐」古斯 马尔莫「雷」乌斯", "fe": "玉蕈属，丛生、菌盖灰白有大理石纹，蟹香味。", "us": "工厂化栽培食用菌（蟹味菇/白玉菇）。", "mn": "大理石纹；蟹味白玉菇；词源：marmoreus＝大理石纹的（拉丁 marmor 大理石）；Hypsizygus＝真姬菇（hypsi 高）"},
+  {"la": "Volvariella volvacea", "zh": "草菇", "g": "担子菌", "tag": "食用菌", "syl": "Vol·va·ri·el·la  vol·va·CE·a", "ph": "沃尔瓦里「埃」拉 沃尔瓦「塞」阿", "fe": "伞菌，具菌托（脚苞），高温型，子实体卵形至伞状。", "us": "热带栽培食用菌（草菇），鲜食为主。", "mn": "volva＝菌托；草堆上的菇；词源：Volvariella＝小苞脚菇（volva 菌托）"},
+  {"la": "Pholiota nameko", "zh": "滑菇（榆黄蘑近缘）", "g": "担子菌", "tag": "食用菌", "syl": "Pho·li·o·ta  na·ME·ko", "ph": "福利奥「塔」 纳「梅」科", "fe": "伞菌，菌盖黏滑，丛生木腐生。", "us": "日本及东亚栽培食用菌（滑菇/滑子蘑）。", "mn": "nameko；黏滑小菇；词源：nameko＝日语「滑菇」的音译；Pholiota＝鳞伞（希腊 pholis 鳞片）"},
+  {"la": "Ganoderma lucidum", "zh": "灵芝", "g": "担子菌", "tag": "药用菌", "syl": "Ga·no·der·ma  lu·CI·dum", "ph": "加诺「德」尔马 卢「奇」杜姆", "fe": "多孔菌，漆样光泽红褐色菌盖，木腐生。", "us": "传统药用真菌，含三萜与多糖（灵芝）。", "mn": "lucidum＝光亮；仙草灵芝；词源：Ganoderma＝灵芝（ganos 光亮 + derma 皮）"},
+  {"la": "Auricularia auricula-judae", "zh": "木耳", "g": "担子菌", "tag": "食用菌", "syl": "Au·ri·cu·la·ri·a  au·ri·cu·la·ju·dae", "ph": "奥里库拉「里」亚 奥里库拉尤「达」埃", "fe": "胶质耳状子实体，生于阔叶树枯木。", "us": "常见栽培食用菌（黑木耳），爽滑富胶质。", "mn": "auricula＝耳；黑木耳；词源：auricula-judae＝犹大的耳朵（auricula 耳）；Auricularia＝木耳（auricula 耳）"},
+  {"la": "Tremella fuciformis", "zh": "银耳", "g": "担子菌", "tag": "食用菌", "syl": "Tre·mel·la  fu·ci·FOR·mis", "ph": "特雷「梅」拉 富西「福」尔米斯", "fe": "胶质、花瓣状白色子实体，需伴生香灰菌才能完成生活史。", "us": "滋补食用菌（银耳/白木耳），羹汤常用。", "mn": "fuciformis＝海藻形；雪耳；词源：Tremella＝银耳（拉丁 tremere 颤动）"},
+  {"la": "Dictyophora indusiata", "zh": "竹荪", "g": "担子菌", "tag": "食用菌", "syl": "Dic·ty·o·pho·ra  in·du·si·A·ta", "ph": "迪克提奥「福」拉 因杜西「阿」塔", "fe": "鬼笔科，具网格菌裙（菌 net），形态奇特。", "us": "名贵食用菌（竹荪），清香脆嫩。", "mn": "indusiata＝裙；网状菌裙；词源：Dictyophora＝竹荪（dictyon 网 + phora 带）"},
+  {"la": "Coprinus comatus", "zh": "毛头鬼伞（鸡腿菇）", "g": "担子菌", "tag": "食用菌", "syl": "Co·pri·nus  co·MA·tus", "ph": "科普里「努」斯 科「马」图斯", "fe": "伞菌，幼时柱状似鸡腿，成熟自溶墨汁状。", "us": "可栽培食用菌（鸡腿菇），鲜嫩宜鲜食。", "mn": "comatus＝毛；鸡腿菇；词源：Coprinus＝鬼伞（希腊 kopros 粪）"},
+  {"la": "Grifola frondosa", "zh": "灰树花（舞茸）", "g": "担子菌", "tag": "药用菌", "syl": "Gri·fo·la  fron·DO·sa", "ph": "格里福「拉」 弗龙「多」萨", "fe": "多孔菌，呈莲花/脑状大丛，木腐生。", "us": "药用与食用菌（灰树花/舞茸），含β-葡聚糖。", "mn": "frondosa＝叶状；舞茸；词源：Grifola＝树花（意大利 grifola）"},
+  {"la": "Hericium erinaceus", "zh": "猴头菇", "g": "担子菌", "tag": "药用菌", "syl": "He·ri·ci·um  e·ri·na·CE·us", "ph": "赫里「奇」乌姆 埃里纳「塞」乌斯", "fe": "齿菌，子实体布满针状菌刺，形似猴头。", "us": "名贵食药两用菌（猴头菇），养胃。", "mn": "erinaceus＝刺猬；猴头菌；词源：Hericium＝猴头（拉丁 ericius 刺猬）"},
+  {"la": "Chlorella", "zh": "小球藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Chlo·rel·la", "ph": "克洛「雷」拉", "fe": "单细胞绿藻，球形，叶绿体杯状，光合效率高。", "us": "高蛋白单细胞食品/饲料，污水净化与固碳。", "mn": "chlorella＝小绿；蛋白藻；词源：Chlorella＝小球藻（希腊 chloros 绿 + -ella 小）"},
+  {"la": "Chlorella pyrenoidosa", "zh": "蛋白核小球藻", "g": "藻类", "tag": "绿藻", "syl": "Chlo·rel·la  py·re·noi·DO·sa", "ph": "克洛「雷」拉 皮雷诺伊「多」萨", "fe": "小球藻的一种，具蛋白核（pyrenoid），蛋白含量高。", "us": "优质单细胞蛋白与保健食品来源。", "mn": "蛋白核；高蛋白小球藻；词源：pyrenoidosa＝具蛋白核的（pyren 核 + -osa 具）；Chlorella＝小球藻（chloros 绿）"},
+  {"la": "Scenedesmus", "zh": "栅藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Sce·ne·DES·mus", "ph": "塞内「德」斯穆斯", "fe": "群体绿藻，4–8 个细胞排成栅状，常见于淡水。", "us": "污水净化、生物燃料（油脂）与饵料藻。", "mn": "栅状排列；污水清道夫；词源：Scenedesmus＝栅藻（希腊 skene 帐篷）"},
+  {"la": "Dunaliella salina", "zh": "杜氏盐藻", "g": "藻类", "tag": "绿藻", "syl": "Du·na·li·el·la  sa·LI·na", "ph": "杜纳利「埃」拉 萨「利」纳", "fe": "无壁单细胞绿藻，耐极高盐，高盐下积累β-胡萝卜素。", "us": "天然β-胡萝卜素（色素）生产藻。", "mn": "salina＝盐；盐湖红藻；词源：Dunaliella＝盐藻（纪念 Dunal）"},
+  {"la": "Chlamydomonas", "zh": "衣藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Chla·my·do·MO·nas", "ph": "克拉米多「莫」纳斯", "fe": "具两根鞭毛、眼点的单细胞绿藻，有性/无性清晰。", "us": "藻类遗传学、鞭毛与趋光性研究的模式生物。", "mn": "衣藻；鞭毛模式藻；词源：Chlamydomonas＝衣藻（chlamys 斗篷 + monas 单胞）"},
+  {"la": "Euglena", "zh": "眼虫（属）", "g": "藻类", "tag": "裸藻", "syl": "Eu·GLE·na", "ph": "埃「格」莱纳", "fe": "具鞭毛与叶绿体的单细胞，兼养（有光光合、无光异养）。", "us": "水体富营养指示生物；也可作饵料/蛋白源。", "mn": "眼点虫；动植物兼有；词源：Euglena＝眼虫（eu 真 + glene 眼）"},
+  {"la": "Spirogyra", "zh": "水绵（属）", "g": "藻类", "tag": "绿藻", "syl": "Spi·ro·GY·ra", "ph": "斯皮罗「吉」拉", "fe": "丝状绿藻，叶绿体呈螺旋带状，接合生殖典型。", "us": "淡水常见丝状藻，教学展示接合生殖。", "mn": "spiro＝螺旋；带状叶绿体；词源：Spirogyra＝水绵（spira 螺旋 + gyros 环）"},
+  {"la": "Ulva", "zh": "石莼（属，海白菜）", "g": "藻类", "tag": "绿藻", "syl": "UL·va", "ph": "「乌」尔瓦", "fe": "叶状绿藻（浒苔/石莼），两层细胞构成的「海白菜」。", "us": "食用海藻与海水养殖环境指示。", "mn": "海白菜；两层的绿；词源：Ulva＝石莼（拉丁 ulva 水草）"},
+  {"la": "Porphyra", "zh": "紫菜（属）", "g": "藻类", "tag": "红藻", "syl": "Por·phy·ra", "ph": "波尔「菲」拉", "fe": "叶状红藻，含藻红素，是紫菜（海苔）的原料。", "us": "重要经济海藻（紫菜/海苔）养殖。", "mn": "紫菜；海苔本体；词源：Porphyra＝紫菜（希腊 porphyra 紫）"},
+  {"la": "Gracilaria", "zh": "江蓠（属）", "g": "藻类", "tag": "红藻", "syl": "Gra·ci·la·ri·a", "ph": "格拉西拉「里」亚", "fe": "红藻，枝柱状，富含琼胶（琼脂）成分。", "us": "琼脂（洋菜）提取的主要原料海藻。", "mn": "琼脂原料藻；词源：Gracilaria＝江蓠（拉丁 gracilis 细）"},
+  {"la": "Laminaria", "zh": "海带（属）", "g": "藻类", "tag": "褐藻", "syl": "La·mi·na·ri·a", "ph": "拉米纳「里」亚", "fe": "大型褐藻，具假根、柄与叶状带片，含褐藻胶。", "us": "海带养殖与褐藻胶（藻胶）工业原料。", "mn": "海带；褐藻胶源；词源：Laminaria＝海带（拉丁 lamina 叶片）"},
+  {"la": "Sargassum", "zh": "马尾藻（属）", "g": "藻类", "tag": "褐藻", "syl": "Sar·gas·sum", "ph": "萨尔「加」苏姆", "fe": "大型褐藻，具气囊与固着器，漂浮成马尾藻海。", "us": "褐藻胶与褐藻多酚来源，药用/饲料。", "mn": "气囊漂浮；马尾藻海；词源：Sargassum＝马尾藻（葡萄牙语 sargaço）"},
+  {"la": "Nannochloropsis", "zh": "微拟球藻（属）", "g": "藻类", "tag": "褐藻（微藻）", "syl": "Nan·no·chlo·rop·sis", "ph": "南诺克隆「普」西斯", "fe": "单细胞褐藻门微藻，油脂含量高，海水种为主。", "us": "微藻生物柴油与 EPA 油脂生产热点藻。", "mn": "微拟球；产油微藻；词源：Nannochloropsis＝微拟球藻（nanno 小 + chloros 绿 + opsis 似）"},
+  {"la": "Haematococcus pluvialis", "zh": "雨生红球藻", "g": "藻类", "tag": "绿藻", "syl": "Hae·ma·to·COC·cus  plu·vi·A·lis", "ph": "赫马托「科」库斯 普卢维「阿」利斯", "fe": "绿藻，胁迫下大量积累虾青素（红色）。", "us": "天然虾青素（强抗氧化剂）生产藻。", "mn": "haemato＝血；虾青素红藻；词源：pluvialis＝雨的（拉丁 pluvia 雨）；Haematococcus＝红球藻（haema 血）"},
+  {"la": "Isochrysis", "zh": "等鞭金藻（属）", "g": "藻类", "tag": "金藻", "syl": "I·so·chry·sis", "ph": "伊索「克」里斯", "fe": "金藻，具两根不等长鞭毛，富含 DHA 等脂肪酸。", "us": "水产幼苗（贝类、虾）优质饵料微藻。", "mn": "金藻；育苗饵料；词源：Isochrysis＝等鞭金藻（iso 等 + chrysos 金）"},
+  {"la": "Navicula", "zh": "舟形藻（属）", "g": "藻类", "tag": "硅藻", "syl": "Na·vi·cu·la", "ph": "纳维「库」拉", "fe": "硅藻，壳面舟形，具硅质细胞壁（硅酸盐）。", "us": "淡水/海水浮游硅藻，指示水体与饵料。", "mn": "舟形；硅壳微藻；词源：Navicula＝舟形藻（拉丁 navicula 小船）"},
+  {"la": "Asterionella", "zh": "星杆藻（属）", "g": "藻类", "tag": "硅藻", "syl": "As·te·ri·o·nel·la", "ph": "阿斯特里奥「内」拉", "fe": "硅藻，细胞星状辐射排列成群体。", "us": "淡水浮游硅藻，水质指示与饵料。", "mn": "星杆；放射状硅藻；词源：Asterionella＝星杆藻（aster 星）"},
+  {"la": "Crypthecodinium cohnii", "zh": "寇氏隐甲藻", "g": "藻类", "tag": "甲藻", "syl": "Cryp·the·co·di·ni·um  COH·ni·i", "ph": "克里普特科迪「尼」乌姆 「科」恩尼伊", "fe": "甲藻，异养可发酵，天然富集 DHA。", "us": "工业化发酵生产藻油 DHA 的菌株。", "mn": "隐甲藻；DHA 藻油源；词源：cohnii＝纪念细菌学家 Cohn；Crypthecodinium＝隐甲藻（crypto 隐）"},
+  {"la": "Bacteriophage T4", "zh": "T4 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE T4", "ph": "巴克泰里奥「菲」吉 T4", "fe": "感染大肠杆菌的双链 DNA 噬菌体，具尾鞘与二十面体头部。", "us": "分子生物学经典模式（基因调控、DNA 复制研究）。", "mn": "噬菌体；细菌的病毒；词源：T4 为噬菌体编号；bacteriophage＝噬菌体（bacterio 细菌 + phagein 吞噬）"},
+  {"la": "Bacteriophage λ", "zh": "λ 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE λ", "ph": "巴克泰里奥「菲」吉 λ", "fe": "感染大肠杆菌的温和噬菌体，可溶原或裂解，基因组图谱清晰。", "us": "基因工程载体（λ 噬菌体载体）与调控研究。", "mn": "λ；溶原裂解双模；词源：λ 为希腊字母编号；温和噬菌体，可溶原"},
+  {"la": "Bacteriophage M13", "zh": "M13 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE M13", "ph": "巴克泰里奥「菲」吉 M13", "fe": "丝状单链 DNA 噬菌体，不裂解而持续分泌噬菌体颗粒。", "us": "噬菌体展示技术（抗体/肽库）的核心载体。", "mn": "丝状；展示技术载体；词源：M13 为实验室编号；丝状噬菌体，噬菌体展示载体"},
+  {"la": "Bacteriophage φX174", "zh": "φX174 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE φX174", "ph": "巴克泰里奥「菲」吉 φX174", "fe": "单链 DNA 噬菌体，基因组极小，首个被测全序列的 DNA 生物。", "us": "分子生物学与测序史上的标志性病毒。", "mn": "φX174；测序里程碑；词源：φ 表示噬菌体，X174 为编号；首个测序的 DNA 基因组"},
+  {"la": "Tobacco mosaic virus", "zh": "烟草花叶病毒", "g": "病毒", "tag": "植物病毒", "syl": "To·BAC·co  mo·SA·ic  VI·rus", "ph": "托「巴」科 莫「赛」克 「维」鲁斯", "fe": "杆状 RNA 植物病毒，衣壳螺旋排列，首个被结晶的病毒。", "us": "植物病毒研究模式，曾证「遗传物质是核酸」。", "mn": "烟草杆状；病毒学奠基；词源：mosaic＝花叶（病毒造成斑驳）；首个被发现的病毒"},
+  {"la": "Cauliflower mosaic virus", "zh": "花椰菜花叶病毒", "g": "病毒", "tag": "植物病毒", "syl": "Cau·li·FLOW·er  mo·SA·ic  VI·rus", "ph": "考利「弗」劳尔 莫「赛」克 「维」鲁斯", "fe": "双链 DNA 植物病毒（花椰菜花叶病毒科），转化研究用。", "us": "植物基因工程载体（CaMV 35S 启动子）来源。", "mn": "花叶；35S 启动子源；词源：mosaic＝花叶；35S 启动子来源"},
+  {"la": "Influenza virus", "zh": "流感病毒", "g": "病毒", "tag": "动物病毒", "syl": "In·flu·EN·za  VI·rus", "ph": "因弗卢「恩」扎 「维」鲁斯", "fe": "分节段单链 RNA 病毒，包膜有血凝素/神经氨酸酶，易变异。", "us": "引起季节性流感；疫苗需每年更新。", "mn": "流感；年年变脸的病毒；词源：influenza 源自意大利语「影响」，指 18 世纪流行的「星象影响」"},
+  {"la": "Human immunodeficiency virus", "zh": "人类免疫缺陷病毒（HIV）", "g": "病毒", "tag": "动物病毒", "syl": "Hu·man  im·mu·no·de·fi·ci·EN·cy  VI·rus", "ph": "休曼 伊姆诺德菲西「恩」西 「维」鲁斯", "fe": "逆转录 RNA 病毒，攻击 CD4⁺ T 细胞，致艾滋病。", "us": "艾滋病病原；抗逆转录病毒治疗靶点。", "mn": "HIV；攻击免疫的病毒；词源：immunodeficiency＝免疫缺陷（immuno 免疫 + deficiency 缺乏）"},
+  {"la": "Hepatitis B virus", "zh": "乙型肝炎病毒", "g": "病毒", "tag": "动物病毒", "syl": "He·pa·ti·tis  B  VI·rus", "ph": "赫帕「提」蒂斯 B 「维」鲁斯", "fe": "部分双链 DNA 病毒，嗜肝，可致慢性肝炎与肝癌。", "us": "乙肝病原；疫苗与抗病毒治疗研究对象。", "mn": "乙肝；嗜肝 DNA 病毒；词源：hepatitis＝肝炎（hepar 肝 + -itis 炎）"},
+  {"la": "SARS-CoV-2", "zh": "新型冠状病毒", "g": "病毒", "tag": "动物病毒", "syl": "SARS-CoV-2", "ph": "SARS-CoV-2", "fe": "具刺突（S 蛋白）的冠状病毒，单链 RNA，引起新冠肺炎。", "us": "2019 年起全球大流行病原；疫苗研发焦点。", "mn": "新冠；带刺突的冠状病毒；词源：SARS＝重症急性呼吸综合征；CoV＝冠状病毒；2 表示第二代"},
+  {"la": "Adenovirus", "zh": "腺病毒（属）", "g": "病毒", "tag": "动物病毒", "syl": "A·de·no·VI·rus", "ph": "阿德诺「维」鲁斯", "fe": "无包膜双链 DNA 病毒，衣壳二十面体，致呼吸道/结膜感染。", "us": "基因治疗与疫苗载体研究常用。", "mn": "腺病毒；基因载体；词源：adeno＝腺（希腊 aden 腺体），最初从腺体组织分离"},
+  {"la": "Herpes simplex virus", "zh": "单纯疱疹病毒", "g": "病毒", "tag": "动物病毒", "syl": "Her·pes  sim·plex  VI·rus", "ph": "赫「尔」佩斯 西姆「普」莱克斯 「维」鲁斯", "fe": "双链 DNA 病毒，可潜伏感染（神经节）后复发。", "us": "口唇/生殖器疱疹病原；潜伏感染模型。", "mn": "疱疹；潜伏复发的病毒；词源：herpes＝希腊语「爬行」（指皮疹蔓延）；simplex＝单纯"},
+  {"la": "Poliovirus", "zh": "脊髓灰质炎病毒", "g": "病毒", "tag": "动物病毒", "syl": "Po·lio·VI·rus", "ph": "波利奥「维」鲁斯", "fe": "无包膜单链 RNA 病毒，侵犯运动神经元致瘫痪。", "us": "小儿麻痹病原；灭活/减毒疫苗已近消灭它。", "mn": "脊灰；疫苗消灭目标；词源：polio＝灰质（希腊 polios 灰），病毒侵犯脊髓前角灰质"},
+  {"la": "Rotavirus", "zh": "轮状病毒", "g": "病毒", "tag": "动物病毒", "syl": "Ro·ta·VI·rus", "ph": "罗塔「维」鲁斯", "fe": "分节段双链 RNA 病毒，轮状衣壳，致婴幼儿腹泻。", "us": "婴幼儿腹泻主要病原；有口服疫苗。", "mn": "轮状；宝宝腹泻菌；词源：rota＝轮子（拉丁 rota），衣壳呈轮状"},
+  {"la": "Rabies virus", "zh": "狂犬病病毒", "g": "病毒", "tag": "动物病毒", "syl": "RA·bies  VI·rus", "ph": "「雷」比斯 「维」鲁斯", "fe": "弹状单链 RNA 病毒，嗜神经，致死率近 100%。", "us": "狂犬病病原；暴露后疫苗可预防。", "mn": "狂犬；致命神经病毒；词源：rabies＝拉丁语「狂乱」，指恐水、狂躁症状"},
+  {"la": "Vaccinia virus", "zh": "痘苗病毒", "g": "病毒", "tag": "动物病毒", "syl": "Vac·ci·ni·a  VI·rus", "ph": "瓦克西「尼」亚 「维」鲁斯", "fe": "双链 DNA 痘病毒，与牛痘近缘，用作疫苗载体。", "us": "天花疫苗株；也是基因治疗载体。", "mn": "痘苗；天花疫苗载体；词源：vaccinia＝牛痘（拉丁 vacca 牛），天花疫苗的来源"},
+  {"la": "Sendai virus", "zh": "仙台病毒", "g": "病毒", "tag": "动物病毒", "syl": "Sen·dai  VI·rus", "ph": "森「大」伊 「维」鲁斯", "fe": "副黏病毒，单链 RNA，能介导细胞融合。", "us": "细胞融合（杂交瘤制备）与实验用病毒。", "mn": "仙台；细胞融合剂；词源：Sendai＝日本仙台，1930 年代在此首次分离"},
+  {"la": "Newcastle disease virus", "zh": "新城疫病毒", "g": "病毒", "tag": "动物病毒", "syl": "New·cas·tle  di·SEA·se  VI·rus", "ph": "纽「卡」索 迪「西」兹 「维」鲁斯", "fe": "副黏病毒，单链 RNA，致禽类新城疫，溶瘤潜力。", "us": "禽类烈性传染病病原；溶瘤病毒研究。", "mn": "新城疫；禽类瘟病；词源：地名 Newcastle（英国纽卡斯尔），1926 年首次报道"},
+  {"la": "Streptococcus pyogenes", "zh": "化脓性链球菌", "g": "G⁺球菌", "tag": "G⁺球菌", "syl": "Strep·to·COC·cus  py·O·ge·nes", "ph": "斯特雷普托「科」库斯 皮「奥」格内斯", "fe": "革兰阳性链状排列球菌，β 溶血；有 M 蛋白、荚膜透明质酸，产链激酶、透明质酸酶、链道酶等侵袭性酶。", "us": "化脓性扁桃体炎、猩红热、丹毒、风湿热与急性肾小球肾炎的病原；青霉素为首选。", "mn": "pyo＝脓 + genes＝产生；β 溶血＋M 蛋白。词源：pyogenes＝产脓的（希腊语 pyon 脓 + -genes 产生）；Streptococcus＝链状球菌（streptos 链 + coccus 球）。"},
+  {"la": "Streptococcus pneumoniae", "zh": "肺炎链球菌", "g": "G⁺球菌", "tag": "G⁺球菌", "syl": "Strep·to·COC·cus  pneu·MO·ni·ae", "ph": "斯特雷普托「科」库斯 普纽「莫」尼亚埃", "fe": "革兰阳性矛头状双球菌，成对排列、钝端相对；有荚膜，α 溶血，Optochin 敏感、胆汁溶菌试验阳性。", "us": "大叶性肺炎、中耳炎、鼻窦炎、脑膜炎的病原；荚膜多糖疫苗预防。", "mn": "矛头双球＋荚膜；Optochin 敏感、胆汁溶菌。词源：pneumoniae＝肺炎的（希腊语 pneumon 肺）。"},
+  {"la": "Mycobacterium tuberculosis", "zh": "结核分枝杆菌", "g": "其他G⁺杆菌", "tag": "抗酸杆菌", "syl": "My·co·bac·TE·ri·um  tu·ber·cu·LO·sis", "ph": "米科巴克「泰」里乌姆 图贝尔库「洛」西斯", "fe": "抗酸杆菌，细胞壁富含分枝菌酸（mycolic acid）与蜡质，Ziehl-Neelsen 染色抗酸；专性需氧，18–24 h 才分裂一次。", "us": "结核病病原，主要经飞沫传播；需异烟肼、利福平等多药联合长程化疗。", "mn": "tuberculum＝小结节；抗酸＋分枝菌酸＋慢生长。词源：tuberculosis＝结节病（拉丁 tuberculum 小结节）；Mycobacterium＝真菌样杆菌（mykes 真菌 + bacterium 杆菌）。"},
+  {"la": "Streptomyces coelicolor", "zh": "天蓝色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  coe·li·CO·lor", "ph": "斯特雷普托「迈」塞斯 策利「科」洛尔", "fe": "革兰阳性腐生放线菌，基内菌丝分枝，气生菌丝分化成孢子链，产天蓝色色素（放线紫红素）；基因组为线性染色体。", "us": "链霉菌形态分化与抗生素生物合成的模式菌，基因组测序完成的第一个链霉菌。", "mn": "coeli＝天空 + color＝颜色 → 天蓝；链霉菌模式种。词源：coelicolor＝天蓝色的（拉丁 caelum 天空 + color 颜色）。"},
+  {"la": "Mycoplasma pneumoniae", "zh": "肺炎支原体", "g": "其他原核类群", "tag": "支原体（无壁）", "syl": "My·co·PLAS·ma  pneu·MO·ni·ae", "ph": "米科「普拉斯」马 普纽「莫」尼亚埃", "fe": "无细胞壁，高度多形性，能通过细菌滤器；菌落呈「油煎蛋」状；对 β-内酰胺类抗生素天然耐药。", "us": "原发性非典型肺炎（支原体肺炎）病原，儿童与青年多见；大环内酯类、四环素类治疗。", "mn": "myco＝真菌样 + plasma＝塑成物；没壁 → 青霉素无效。词源：Mycoplasma＝真菌样形成物（希腊语 mykes 真菌 + plasma 塑成物）。"},
+  {"la": "Chlamydia trachomatis", "zh": "沙眼衣原体", "g": "其他原核类群", "tag": "衣原体", "syl": "Chla·MY·di·a  tra·cho·MA·tis", "ph": "克拉「米」迪亚 特拉科「马」蒂斯", "fe": "专性细胞内寄生，具原体（EB，感染相）与网状体（RB，繁殖相）两相生活史；Giemsa 染色可见胞内包涵体。", "us": "沙眼、包涵体结膜炎、非淋菌性尿道炎、淋巴肉芽肿的病原；四环素类/阿奇霉素治疗。", "mn": "原体感染、网状体繁殖；沙眼病原。词源：trachomatis＝沙眼的（希腊语 trachoma 粗糙）；Chlamydia＝斗篷（chlamys，指包涵体包裹）。"},
+  {"la": "Rickettsia rickettsii", "zh": "立氏立克次体", "g": "其他原核类群", "tag": "立克次体", "syl": "Ric·KETT·si·a  ric·KETT·si·i", "ph": "里「凯特」西亚 里「凯特」西伊", "fe": "革兰阴性专性细胞内寄生小杆菌，经蜱传播，侵入血管内皮细胞增殖，引起血管炎与皮疹。", "us": "落基山斑点热的病原；四环素类、氯霉素治疗，预防靠防蜱。", "mn": "立克次体＝节肢动物传播＋必须活细胞培养。词源：rickettsii 纪念病原发现者 H. T. Ricketts；Rickettsia 以其姓氏命名。"},
+  {"la": "Treponema pallidum", "zh": "梅毒螺旋体", "g": "其他原核类群", "tag": "螺旋体", "syl": "Tre·po·NE·ma  PAL·li·dum", "ph": "特雷波「内」马 「帕」利杜姆", "fe": "细长螺旋状螺旋体，革兰阴性但不易着色，暗视野显微镜下可见；运动活泼，不能在人工培养基上生长。", "us": "梅毒病原，性接触与母婴垂直传播；青霉素为首选，晚期可累及心血管与神经。", "mn": "pallidum＝苍白的；暗视野看螺旋。词源：pallidum＝苍白的（拉丁 pallidus）；Treponema＝转动的线（希腊语 trepein 转 + nema 线）。"},
+  {"la": "Gluconobacter melanogenus", "zh": "黑醋酸杆菌（生黑葡萄糖酸杆菌）", "g": "工业微生物", "tag": "G⁻好氧杆菌", "syl": "Glu·co·no·BAC·ter  me·la·no·GE·nus", "ph": "格卢科诺「巴」克特 梅拉诺「盖」努斯", "fe": "革兰阴性专性需氧杆菌，氧化能力不完全：把 D-山梨醇氧化为 L-山梨糖，并分泌水溶性黑色素使菌液/菌落变黑。", "us": "维生素 C 二步发酵法第一步（D-山梨醇 → L-山梨糖）的生产菌，与氧化葡萄糖酸杆菌配套。", "mn": "melano＝黑 + genus＝产生 → 生黑；VC 第一步「醇变糖」。词源：melanogenus＝产黑的（希腊语 melas 黑 + -genus 产生）；Gluconobacter＝葡萄糖酸杆菌（gluconic 葡萄糖酸 + bacter 杆菌）。"},
+  {"la": "Corynebacterium pekinense", "zh": "北京棒杆菌", "g": "工业微生物", "tag": "G⁺棒状杆菌", "syl": "Co·ry·ne·bac·TE·ri·um  pe·ki·NEN·se", "ph": "科里内巴克「泰」里乌姆 佩基「嫩」塞", "fe": "革兰阳性无芽孢棒状杆菌，好氧，菌体常呈 V 形排列；生物素是其必需生长因子，限量供给会改变细胞膜通透性。", "us": "我国 1950 年代自主筛得的谷氨酸发酵菌，早期味精（L-谷氨酸）生产的主力；生物素亚适量使谷氨酸大量外排。", "mn": "pekinense＝北京的；生物素「限量」→ 膜漏 → 谷氨酸外排。词源：pekinense＝北京的（Peking 旧拼）；Corynebacterium＝棒状杆菌（希腊语 koryne 棒）。"}
 ];
 
-const GROUPS = {细菌:"var(--b)",放线菌:"var(--act)",古菌:"var(--arc)",蓝细菌:"var(--cyan)",酵母菌:"var(--yeast)",霉菌:"var(--mold)",担子菌:"var(--basid)",藻类:"var(--algae)",病毒:"var(--v)"};
-const GKEYS  = ["细菌","放线菌","古菌","蓝细菌","酵母菌","霉菌","担子菌","藻类","病毒"];
+const GROUPS = {细菌:"var(--b)","G⁺球菌":"var(--cocci)","其他G⁺杆菌":"var(--grod)",放线菌:"var(--act)","其他原核类群":"var(--prok)","工业微生物":"var(--ind)",古菌:"var(--arc)",蓝细菌:"var(--cyan)",酵母菌:"var(--yeast)",霉菌:"var(--mold)",担子菌:"var(--basid)",藻类:"var(--algae)",病毒:"var(--v)"};
+const GKEYS  = ["细菌","G⁺球菌","其他G⁺杆菌","放线菌","其他原核类群","工业微生物","古菌","蓝细菌","酵母菌","霉菌","担子菌","藻类","病毒"];
 const K_STATE="mmc_state_v1", K_CUSTOM="mmc_custom_v1", K_SET="mmc_set_v1", K_MISC="mmc_misc_v1";
 
 /* ============ 状态 ============ */
@@ -517,7 +539,23 @@ let S = load(K_STATE,{});
 let CUSTOM = load(K_CUSTOM,[]);
 let SET = Object.assign({autoSpeak:false, rate:0.85, newLimit:20, shuffle:false, ai:{on:false,base:"",key:"",model:""}}, load(K_SET,{}));
 if(!SET.ai) SET.ai={on:false,base:"",key:"",model:""};
-let MISC = Object.assign({todayNew:0, lastDate:strDate(Date.now())}, load(K_MISC,{}));
+let MISC = Object.assign({todayNew:0, lastDate:strDate(Date.now()), theme:"light"}, load(K_MISC,{}));
+
+/* ============ 主题：深色 / 浅色 ============ */
+function applyTheme(t){
+  t = (t==="dark") ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", t);
+  MISC.theme = t; save(K_MISC, MISC);
+  const b = document.getElementById("btnTheme");
+  if(b){ b.textContent = (t==="dark") ? "☀️" : "🌙"; b.title = (t==="dark") ? "切换浅色模式" : "切换深色模式"; }
+  const mt = document.querySelector('meta[name="theme-color"]');
+  if(mt) mt.setAttribute("content", t==="dark" ? "#1a1a1a" : "#f2f5fa");
+}
+(function(){
+  const b = document.getElementById("btnTheme");
+  if(b) b.onclick = () => applyTheme(document.documentElement.getAttribute("data-theme")==="dark" ? "light" : "dark");
+  applyTheme(document.documentElement.getAttribute("data-theme") || "light");
+})();
 
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -651,6 +689,14 @@ function buildBookQueue(){
   const due = sub.filter(d=>{const s=S[d.id];return s&&s.reps>0&&s.due<=now});
   const rest = Math.max(0, SET.newLimit - MISC.todayNew);
   const nw = sub.filter(d=>{const s=S[d.id];return !s||s.seen===0}).slice(0, rest);
+  /* 工业微生物按「VC 二步发酵 → 氨基酸 → 抗生素」的教学顺序出场 */
+  if(CUR_BOOK==="工业微生物"){
+    const SEQ=["Gluconobacter melanogenus","Gluconobacter oxydans","Bacillus megaterium",
+      "Corynebacterium pekinense","Corynebacterium glutamicum","Brevibacterium flavum",
+      "Penicillium chrysogenum","Saccharopolyspora erythraea","Streptomyces griseus"];
+    const ord=d=>{const i=SEQ.indexOf(d.la);return i<0?99:i};
+    due.sort((a,b)=>ord(a)-ord(b)); nw.sort((a,b)=>ord(a)-ord(b));
+  }
   queue = due.concat(nw);
   if(SET.shuffle){ for(let i=queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[queue[i],queue[j]]=[queue[j],queue[i]]} }
   qi = 0;
@@ -683,7 +729,7 @@ function cardHTML(d){
     '<div class="inner">'+
       '<div class="face front">'+
         '<div class="stripe" style="background:'+c+'"></div>'+
-        '<span class="gbact" style="background:'+c+'22;color:'+c+'">'+esc(d.g)+' · '+esc(d.tag||"")+'</span>'+
+        '<span class="gbact" style="background:color-mix(in srgb,'+c+' 14%,transparent);color:'+c+'">'+esc(d.g)+' · '+esc(d.tag||"")+'</span>'+
         '<div class="fav">'+(s.fav?"⭐":"☆")+'</div>'+
         '<div class="fcenter">'+
         '<div class="latin">'+esc(d.la)+' <button class="spk" data-spk="la">🔊</button></div>'+
@@ -700,7 +746,7 @@ function cardHTML(d){
       '</div>'+
       '<div class="face back">'+
         '<div class="stripe" style="background:'+c+'"></div>'+
-        '<span class="gbact" style="background:'+c+'22;color:'+c+';font-style:italic;font-family:Georgia,serif">'+esc(d.la)+'</span>'+
+        '<span class="gbact" style="background:color-mix(in srgb,'+c+' 14%,transparent);color:'+c+';font-style:italic;font-family:Georgia,serif">'+esc(d.la)+'</span>'+
         '<div class="sec"><h4>是什么 / 特征</h4><p>'+nl(d.fe)+'</p></div>'+
         '<div class="sec"><h4>有什么作用 / 用途</h4><p>'+nl(d.us)+'</p></div>'+
         (d.mn?'<div class="mnbox"><b>记忆点</b>　'+nl(d.mn)+'</div>':'')+
@@ -947,18 +993,26 @@ function renderQ(){
 /* ============ 词库 ============ */
 let FILTER = "全部"; let lastFiltered = [];
 const filtersEl=document.getElementById("filters");
+/* 筛选：分类 / 未掌握 / ⭐只看收藏 / ❌只看不会，互斥；再点一次快捷筛选取消 */
+const F_FAV="⭐ 只看收藏", F_BAD="❌ 只看不会";
 function renderFilters(){
-  const arr=["全部","收藏","未掌握"].concat(GKEYS);
+  const arr=["全部",F_FAV,F_BAD,"未掌握"].concat(GKEYS);
   filtersEl.innerHTML = arr.map(f=>'<div class="fbtn'+(FILTER===f?" on":"")+'" data-f="'+f+'">'+f+'</div>').join("");
 }
 renderFilters();
-filtersEl.onclick=e=>{const f=e.target.closest(".fbtn"); if(!f) return; FILTER=f.dataset.f; renderFilters(); renderList();};
+filtersEl.onclick=e=>{
+  const f=e.target.closest(".fbtn"); if(!f) return;
+  const v=f.dataset.f;
+  FILTER = (v===FILTER && (v===F_FAV||v===F_BAD)) ? "全部" : v;   // 再点一次取消
+  renderFilters(); renderList();
+};
 document.getElementById("q").oninput=renderList;
 
 function renderList(){
   const kw = document.getElementById("q").value.trim().toLowerCase();
   let arr = ALL.filter(d=>{
-    if(FILTER==="收藏"){ if(!(S[d.id]&&S[d.id].fav)) return false; }
+    if(FILTER===F_FAV){ if(!(S[d.id]&&S[d.id].fav)) return false; }
+    else if(FILTER===F_BAD){ const s=S[d.id]; if(!(s&&s.seen>0&&s.reps===0)) return false; }
     else if(FILTER==="未掌握"){ if(mastered(d.id)) return false; }
     else if(GKEYS.indexOf(FILTER)>=0){ if(d.g!==FILTER) return false; }
     if(kw){
@@ -974,6 +1028,10 @@ function renderList(){
     if(kw){
       list.innerHTML='<div class="empty">词库内没有「'+esc(kw)+'」<br>要不要联网用 NCBI 分类库识别它？<br><button class="btn pri" id="onLib" style="max-width:260px;margin-top:10px">🌐 联网识别「'+esc(kw)+'」</button></div>';
       const b=document.getElementById("onLib"); if(b) b.onclick=()=>onlineLookup(kw);
+    } else if(FILTER===F_FAV){
+      list.innerHTML='<div class="empty">还没有收藏的卡片<br>在学习页点右上角 ☆ 或词库里的 ☆ 收藏</div>';
+    } else if(FILTER===F_BAD){
+      list.innerHTML='<div class="empty">没有标记为「不会」的卡片<br>复习时选「不会」或「记错了」的卡片会出现在这里</div>';
     } else {
       list.innerHTML='<div class="empty">没有匹配的词条<br>换个关键词，或点下面按钮自己添加</div>';
     }
@@ -999,7 +1057,7 @@ function openDetail(d){
   const c=GROUPS[d.g]||"var(--pri)"; const s=st(d.id);
   sheet('<div class="closebar"><b>词条详情</b><span class="x" onclick="closeSheet()">×</span></div>'+
     '<div class="cardbox" style="margin:0">'+
-      '<span class="gbact" style="background:'+c+'22;color:'+c+'">'+esc(d.g)+' · '+esc(d.tag||"")+'</span>'+
+      '<span class="gbact" style="background:color-mix(in srgb,'+c+' 14%,transparent);color:'+c+'">'+esc(d.g)+' · '+esc(d.tag||"")+'</span>'+
       '<div class="latin" style="margin-top:12px">'+esc(d.la)+' <button class="spk" data-spk="la">🔊</button></div>'+
       '<div class="zhname">'+esc(d.zh)+' <button class="spk" data-spk="zh">🔊</button></div>'+
       '<div class="rowlab">音节与重音</div><div class="syl">'+sylHTML(d.syl)+'</div>'+
@@ -1376,9 +1434,13 @@ function renderBooks(){
   const total = ALL.length;
   const mAll = ALL.filter(d=>mastered(d.id)).length;
   const DESC = {
-    "全部":"所有 9 类微生物",
+    "全部":"所有 "+GKEYS.length+" 类微生物",
     "细菌":"杆菌 / 球菌 / 芽孢菌",
+    "G⁺球菌":"葡萄球菌 / 链球菌 / 肺炎球菌",
+    "其他G⁺杆菌":"分枝杆菌 / 乳杆菌",
     "放线菌":"链霉菌等产抗生素丝状菌",
+    "其他原核类群":"支原体 / 衣原体 / 立克次体 / 螺旋体",
+    "工业微生物":"发酵菌种 / 氨基酸 / 抗生素生产",
     "古菌":"产甲烷 / 嗜盐 / 嗜热",
     "蓝细菌":"光合固氮 / 水华蓝藻",
     "酵母菌":"芽殖 / 裂殖 / 发酵产乙醇",
