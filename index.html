@@ -285,7 +285,7 @@ nav div.on{color:var(--pri)}
 
     <!-- LIB -->
     <section id="lib" class="view">
-      <input class="search" id="q" placeholder="搜拉丁名 / 中文名；查不到可点「🌐 联网查」识别任意种名（如 Escherichia coli）…">
+      <input class="search" id="q" placeholder="搜拉丁名 / 中文名；查不到点「🌐 联网查」——拉丁、中文俗名、英文名都行…">
       <div class="filters" id="filters"></div>
       <div class="ttl" id="libCount"></div>
       <div class="cardbox" id="list" style="padding:0"></div>
@@ -559,16 +559,74 @@ function pickVoice(pref){
   for(const p of pref){ const v=VOICES.find(v=>v.lang && v.lang.toLowerCase().replace("_","-").startsWith(p)); if(v) return v; }
   return null;
 }
-function speak(text, mode){
-  if(!("speechSynthesis" in window)){ toast("此浏览器不支持语音朗读"); return; }
-  try{ speechSynthesis.cancel(); }catch(e){}
-  const u = new SpeechSynthesisUtterance(text);
-  const zh = mode==="zh";
-  u.lang = zh?"zh-CN":"la-LA";
-  const v = pickVoice(zh?["zh","cmn"]:["la","it","en"]);
-  if(v) u.voice=v; else u.lang = zh?"zh-CN":"en-US";
-  u.rate = zh?1:SET.rate;
-  try{ speechSynthesis.speak(u); }catch(e){}
+/* 在线发音兜底：<audio> 播放不受 CORS 限制 */
+let _audio=null;
+function onlineSpeak(text, mode){
+  try{
+    if(!_audio) _audio=new Audio();
+    const q=encodeURIComponent(text);
+    const urls = mode==="zh"
+      ? ["https://fanyi.baidu.com/gettts?lan=zh&text="+q+"&spd=3&source=web",
+         "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN&q="+q]
+      : ["https://dict.youdao.com/dictvoice?type=2&audio="+q,
+         "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=la&q="+q];
+    let i=0;
+    const step=()=>{
+      if(i>=urls.length){
+        toast("此浏览器没有可用的语音引擎，在线发音也无法合成该词。可改用 Safari / Chrome 打开，或按卡片上的「中文近似读音」自己读。");
+        return;
+      }
+      _audio.onerror=()=>{ i++; step(); };
+      _audio.src=urls[i];
+      const pr=_audio.play();
+      if(pr&&pr.catch) pr.catch(()=>{ i++; step(); });
+    };
+    step();
+  }catch(e){ toast("发音失败：当前浏览器不支持语音播放"); }
+}
+/* iOS(尤其"添加到主屏幕"的 Web App)需要一次用户手势预热语音引擎 */
+let _warmed=false;
+function warmUpTTS(){
+  if(_warmed || !("speechSynthesis" in window)) return; _warmed=true;
+  try{
+    const u=new SpeechSynthesisUtterance(".");
+    u.volume=0; u.lang="en-US"; u.rate=1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+document.addEventListener("pointerdown", ()=>{ loadVoices(); warmUpTTS(); }, {once:true, passive:true});
+function speak(text, mode, manual){
+  if(manual===undefined) manual=true;
+  text=String(text||"").trim(); if(!text) return;
+  if("speechSynthesis" in window){
+    try{
+      speechSynthesis.cancel();
+      try{ speechSynthesis.resume(); }catch(e){}   // iOS 兼容
+      const zh = mode==="zh";
+      const u = new SpeechSynthesisUtterance(text);
+      let v = pickVoice(zh?["zh","cmn"]:["la","it","en"]);
+      if(!v && !VOICES.length){ loadVoices(); v=pickVoice(zh?["zh","cmn"]:["la","it","en"]); }
+      if(v){ u.voice=v; u.lang=v.lang||(zh?"zh-CN":"en-US"); }   // lang 与 voice 保持一致，避免"有voice但静音"
+      else { u.lang = zh?"zh-CN":"en-US"; }
+      u.rate = zh?1:SET.rate;
+      u.volume = 1;
+      let started=false, failed=false;
+      u.onstart=()=>{started=true};
+      u.onerror=()=>{failed=true;};
+      speechSynthesis.speak(u);
+      if(!VOICES.length) setTimeout(loadVoices, 400);   // 语音列表异步加载，稍后补一次
+      /* 双保险：浏览器"声称支持但没声音"时，300ms 后仍未开始 → 走在线发音 */
+      if(manual){
+        setTimeout(()=>{
+          if(!started && !failed){
+            try{ if(!speechSynthesis.speaking && !speechSynthesis.pending){ onlineSpeak(text,mode); } }catch(e){}
+          }
+        },300);
+      }
+      return;
+    }catch(e){}
+  }
+  if(manual) onlineSpeak(text, mode);
 }
 
 /* ============ 学习队列 ============ */
@@ -664,7 +722,7 @@ function renderStack(){
     stackEl.appendChild(c);
   });
   const top = stackEl.querySelector('[data-pos="0"]');
-  if(top && SET.autoSpeak) setTimeout(()=>speak(cur.la,"la"),260);
+  if(top && SET.autoSpeak) setTimeout(()=>speak(cur.la,"la",false),260);
   updateRing();
 }
 function layout(c,i){
@@ -868,7 +926,7 @@ function renderList(){
     else if(FILTER==="未掌握"){ if(mastered(d.id)) return false; }
     else if(GKEYS.indexOf(FILTER)>=0){ if(d.g!==FILTER) return false; }
     if(kw){
-      const hay=(d.la+" "+d.zh+" "+(d.fe||"")+" "+(d.us||"")+" "+(d.mn||"")+" "+(d.tag||"")).toLowerCase();
+      const hay=(d.la+" "+d.zh+" "+(d.fe||"")+" "+(d.us||"")+" "+(d.mn||"")+" "+(d.tag||"")+" "+(d.ph||"")+" "+(d.syl||"")).toLowerCase();
       if(hay.indexOf(kw)<0) return false;
     }
     return true;
@@ -939,26 +997,40 @@ function openDetail(d){
 /* ============ 联网识别（NCBI Taxonomy） ============ */
 const RANK_ZH={species:"种",genus:"属",family:"科",order:"目",class:"纲",phylum:"门","superclass":"总纲",kingdom:"界",domain:"域",strain:"株",subspecies:"亚种",subfamily:"亚科",tribe:"族",subgenus:"亚属",variety:"变种",form:"变型","no rank":"未定级"};
 let _onlineBusy=false;
-async function aiTranslate(sci, lin, wikiEn){
+/* AI 通用调用（OpenAI 兼容接口） */
+async function aiChat(user, sys){
   const ai=SET.ai; if(!ai||!ai.on||!ai.key||!ai.base||!ai.model) return null;
   const base=ai.base.replace(/\/+$/,"");
-  const prompt="微生物拉丁学名："+sci+"\n分类谱系："+(lin||"")+(wikiEn?("\n英文简介："+wikiEn):"")+
-    "\n请只输出严格 JSON（不要任何多余文字）：{\"zh\":\"标准中文名（教材常用译名；没有则音译或留空）\",\"desc\":\"一句话中文简介：它是什么、主要特征或用途\"}";
   const body=JSON.stringify({model:ai.model, temperature:0.3, messages:[
-    {role:"system",content:"你是严谨的微生物学翻译专家，只输出 JSON。"},
-    {role:"user",content:prompt}]});
+    {role:"system",content:sys||"你是严谨的微生物学专家，只输出 JSON。"},
+    {role:"user",content:user}]});
   const r=await fetch(base+"/chat/completions",{method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+ai.key}, body});
   if(!r.ok) throw new Error("HTTP "+r.status);
   const j=await r.json();
   const txt=(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||"";
   const m=txt.match(/\{[\s\S]*\}/); if(!m) return null;
-  const o=JSON.parse(m[0]);
-  return {zh:(o.zh||"").trim(), desc:(o.desc||"").trim()};
+  return JSON.parse(m[0]);
+}
+/* AI 翻译：中文名 + 特征 + 用途 + 记忆点（和内置卡片同结构） */
+async function aiTranslate(sci, lin, wikiEn){
+  const o = await aiChat(
+    "微生物拉丁学名："+sci+"\n分类谱系："+(lin||"")+(wikiEn?("\n英文简介："+wikiEn):"")+
+    "\n请只输出严格 JSON（不要任何多余文字）：{\"zh\":\"标准中文名（教材常用译名；没有则音译或留空）\",\"ph\":\"按拉丁读音规则写中文近似读音，重读音节用「」标出，如 阿斯科「佩」尔吉鲁斯\",\"feat\":\"是什么/特征：2-4 句中文，教材风格写形态与生理特征\",\"use\":\"有什么作用/用途：1-3 句中文（发酵、产酶、致病、模式生物等）\",\"tip\":\"记忆点：一句联想口诀，可无\"}");
+  if(!o) return null;
+  return {zh:(o.zh||"").trim(), ph:(o.ph||"").trim(), feat:(o.feat||"").trim(), use:(o.use||"").trim(), tip:(o.tip||"").trim()};
+}
+/* AI 把中文/英文俗名翻译成拉丁学名 */
+async function aiToLatin(q){
+  const o = await aiChat(
+    "用户输入了一个名称（可能是中文俗名、英文俗名或拼错的拉丁名）：\""+q+"\"\n"+
+    "请给出最可能对应的微生物拉丁学名。只输出严格 JSON：{\"latin\":\"属名+种加词或属名\",\"zh\":\"中文名\"}。若没有对应的微生物，输出 {\"latin\":\"\",\"zh\":\"\"}");
+  if(!o) return null;
+  return {latin:(o.latin||"").trim(), zh:(o.zh||"").trim()};
 }
 async function onlineLookup(raw){
   const q=(raw||document.getElementById("q").value).trim();
-  if(!q){ toast("先在上面输入要查的拉丁名"); document.getElementById("q").focus(); return; }
+  if(!q){ toast("输入名称即可查：拉丁 / 中文 / 英文都行"); document.getElementById("q").focus(); return; }
   if(_onlineBusy) return; _onlineBusy=true;
   const box=document.getElementById("list");
   let aiRes=null;
@@ -966,10 +1038,14 @@ async function onlineLookup(raw){
   box.innerHTML='<div class="empty">🌐 正在 NCBI 分类库联网识别「'+esc(q)+'」…<br><span style="font-size:12px;color:var(--ink3)">需要联网，请稍候</span></div>';
   try{
     const eu="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
-    const s=await fetch(eu+"esearch.fcgi?db=taxonomy&term="+encodeURIComponent(q)+"&retmode=json&retmax=5");
-    const sj=await s.json();
-    const ids=sj.esearchresult&&sj.esearchresult.idlist;
-    if(!ids||!ids.length){ box.innerHTML='<div class="empty">NCBI 未找到「'+esc(q)+'」<br>请确认拼写（属名+种加词，如 Escherichia coli）</div>'; return; }
+    const es=async term=>{ const s=await fetch(eu+"esearch.fcgi?db=taxonomy&term="+encodeURIComponent(term)+"&retmode=json&retmax=5"); const sj=await s.json(); return sj.esearchresult&&sj.esearchresult.idlist; };
+    let ids=await es(q), viaAi=null;
+    if((!ids||!ids.length)&&aiOn){
+      box.innerHTML='<div class="empty">NCBI 未直接命中「'+esc(q)+'」<br>正在请 AI 翻译成拉丁学名…</div>';
+      viaAi=await aiToLatin(q);
+      if(viaAi&&viaAi.latin) ids=await es(viaAi.latin);
+    }
+    if(!ids||!ids.length){ box.innerHTML='<div class="empty">未找到「'+esc(q)+'」<br>'+(aiOn?"换个说法或拼写再试":"试试拉丁学名（属名+种加词），或在设置里开启 AI 翻译，可支持中文/英文输入")+'</div>'; return; }
     const f=await fetch(eu+"efetch.fcgi?db=taxonomy&id="+ids[0]);
     const xml=new DOMParser().parseFromString(await f.text(),"text/xml");
     const g=x=>{const e=xml.getElementsByTagName(x)[0];return e?e.textContent.trim():"";};
@@ -978,11 +1054,17 @@ async function onlineLookup(raw){
     const path=(lin?lin.split(";").map(s=>s.trim()).filter(Boolean):[]);
     box.innerHTML=
       '<div class="cardbox" style="padding:14px;margin-top:0">'+
-      '<div class="gbact" style="background:var(--pri)22;color:var(--pri)">🌐 联网识别结果 · NCBI Taxonomy</div>'+
+      '<div class="gbact" style="background:var(--pri)22;color:var(--pri)">🌐 联网识别结果 · NCBI Taxonomy'+(viaAi?' · AI 转换拉丁名':'')+'</div>'+
       '<div class="latin" style="margin-top:10px">'+esc(sci)+' <button class="spk" data-onl="1">🔊</button></div>'+
-      '<div class="zhname">'+(cn?esc(cn):"（NCBI 无常用中文名；可点「加入词库」后自行补充）")+'</div>'+
+      '<div class="zhname">'+(cn?esc(cn):(viaAi&&viaAi.zh?esc(viaAi.zh):"（中文名生成中…）"))+'</div>'+
+      (viaAi?'<div class="tagline">已将「'+esc(q)+'」识别为 '+esc(viaAi.latin)+'</div>':'')+
       '<div class="sec" id="wikiBox" style="display:none"><h4>简介（维基百科）</h4><p id="wikiTxt"></p></div>'+
-      (aiOn?'<div class="sec" id="aiBox"><h4>🌐 AI 中文翻译</h4><div class="ai-name" style="font-weight:800;font-size:15px;color:var(--pri)">翻译中…</div><p class="ai-desc" style="margin-top:4px;color:var(--ink3)">正在调用 AI…</p></div>':'')+
+      (aiOn?'<div id="aiBox">'+
+        '<div class="sec"><h4>🌐 AI 中文翻译</h4><div class="ai-name" style="font-weight:800;font-size:15px;color:var(--pri)">翻译中…</div><div class="ai-ph" style="margin-top:6px;font-size:13.5px;color:var(--ink2)"></div></div>'+
+        '<div class="sec"><h4>是什么 / 特征</h4><p class="ai-feat" style="color:var(--ink3)">生成中…</p></div>'+
+        '<div class="sec"><h4>有什么作用 / 用途</h4><p class="ai-use" style="color:var(--ink3)">生成中…</p></div>'+
+        '<div class="mnbox ai-tip" style="display:none"><b>记忆点</b>　<span></span></div>'+
+      '</div>':'')+
       '<div class="sec"><h4>等级 / 类群</h4><p>'+ (rankZh?('<b>'+rankZh+'</b> · '):'') + (div?esc(div):'') +'</p></div>'+
       '<div class="sec"><h4>分类谱系</h4><p style="line-height:1.9">'+(path.length?path.map(esc).join(' <span style="color:var(--ink3)">›</span> '):'—')+'</p></div>'+
       '<div class="tagline">taxid '+taxid+' · 数据来源 NCBI Taxonomy（eutils，免费公开）</div>'+
@@ -993,10 +1075,11 @@ async function onlineLookup(raw){
     box.querySelector("[data-onl]").onclick=()=>speak(sci,"la");
     document.getElementById("onClose").onclick=renderList;
     document.getElementById("onAdd").onclick=()=>{
-      CUSTOM.push({id:"c"+Date.now(), la:sci, zh:((aiRes&&aiRes.zh)?aiRes.zh:(cn||"待补充")), g:guessGroup(div,lin),
-        tag:(rankZh||"")+(div?" · "+div:""), syl:"", ph:"",
-        fe:((aiRes&&aiRes.desc)?aiRes.desc+"\n":"")+"分类谱系："+(path.join(" > ")||"—"),
-        us:"联网识别自 NCBI Taxonomy（taxid "+taxid+"）"+(aiRes&&aiRes.zh?" · AI 译名":""), mn:"", custom:1, online:1});
+      CUSTOM.push({id:"c"+Date.now(), la:sci, zh:((aiRes&&aiRes.zh)?aiRes.zh:(cn||(viaAi&&viaAi.zh)||"待补充")), g:guessGroup(div,lin),
+        tag:(rankZh||"")+(div?" · "+div:""), syl:"", ph:(aiRes&&aiRes.ph?aiRes.ph:""),
+        fe:(aiRes&&aiRes.feat?aiRes.feat+"\n":"")+"分类谱系："+(path.join(" > ")||"—"),
+        us:(aiRes&&aiRes.use?aiRes.use:"联网识别自 NCBI Taxonomy（taxid "+taxid+"）"),
+        mn:(aiRes&&aiRes.tip?aiRes.tip:""), custom:1, online:1});
       save(K_CUSTOM,CUSTOM); rebuild(); toast("已加入词库，可去学习/测验"); renderList();
     };
     if(aiOn){
@@ -1004,8 +1087,15 @@ async function onlineLookup(raw){
         if(!r) return; aiRes=r;
         const z=box.querySelector(".zhname"); if(z && r.zh) z.textContent=r.zh;
         const ab=document.getElementById("aiBox");
-        if(ab){ ab.querySelector(".ai-name").textContent=r.zh||"（无中文名）"; ab.querySelector(".ai-desc").textContent=r.desc||""; }
-      }).catch(()=>{ const ab=document.getElementById("aiBox"); if(ab){ ab.querySelector(".ai-name").textContent="（AI 翻译失败）"; ab.querySelector(".ai-desc").textContent="检查 API 配置 / 网络 / 是否允许跨域(CORS)"; } });
+        if(ab){
+          ab.querySelector(".ai-name").textContent=r.zh||"（无中文名）";
+          const phEl=ab.querySelector(".ai-ph");
+          if(phEl) phEl.innerHTML = r.ph ? ('中文近似读音：'+phHTML(r.ph)) : '';
+          const fe=ab.querySelector(".ai-feat"); fe.textContent=r.feat||"（无）"; fe.style.color="";
+          const ue=ab.querySelector(".ai-use"); ue.textContent=r.use||"（无）"; ue.style.color="";
+          const tp=ab.querySelector(".ai-tip"); if(r.tip){ tp.querySelector("span").textContent=r.tip; tp.style.display=""; }
+        }
+      }).catch(()=>{ const ab=document.getElementById("aiBox"); if(ab){ ab.querySelector(".ai-name").textContent="（AI 翻译失败）"; ab.querySelector(".ai-feat").textContent="检查 API 配置 / 网络 / 是否允许跨域(CORS)"; ab.querySelector(".ai-use").textContent=""; } });
     }
     /* 维基百科简介：渲染后再异步补全，不阻塞识别 */
     fetch("https://zh.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&redirects=1&titles="+encodeURIComponent(sci))
@@ -1156,6 +1246,7 @@ document.getElementById("btnSet").onclick=()=>{
     '<div class="sw">新卡自动朗读拉丁名<input type="checkbox" id="s_auto"'+(SET.autoSpeak?" checked":"")+'></div>'+
     '<div class="sw">随机顺序（打乱新卡与复习）<input type="checkbox" id="s_shuf"'+(SET.shuffle?" checked":"")+'></div>'+
     '<div class="sw">朗读语速<div style="display:flex;align-items:center;gap:8px"><input type="range" id="s_rate" min="0.5" max="1.2" step="0.05" value="'+SET.rate+'" style="width:110px"><span id="s_ratev" style="font-size:12px;color:var(--ink3)">'+SET.rate+'</span></div></div>'+
+    '<div class="sw">发音测试（拉丁+中文）<button class="btn" id="s_tts" style="max-width:110px;padding:7px">▶ 试听</button></div>'+
     '<div class="fld"><label>每日新卡上限</label><input type="number" id="s_lim" value="'+SET.newLimit+'" min="5" max="100"></div>'+
     '<div class="ttl">🌐 AI 翻译（联网识别时调用）</div>'+
     '<div class="sw">启用 AI 翻译<input type="checkbox" id="s_aion"'+(SET.ai.on?" checked":"")+'></div>'+
@@ -1196,6 +1287,7 @@ document.getElementById("btnSet").onclick=()=>{
   const pv=document.getElementById("s_aiprov");
   pv.value=(SET.ai.prov&&PRV[SET.ai.prov])?SET.ai.prov:"";
   pv.onchange=()=>{ const p=PRV[pv.value]; if(p){ document.getElementById("s_aibase").value=p.base; document.getElementById("s_aimodel").value=p.model; } };
+  document.getElementById("s_tts").onclick=()=>{ speak("Escherichia coli","la"); setTimeout(()=>speak("大肠埃希菌","zh"),2200); };
   document.getElementById("s_save").onclick=()=>{
     SET.autoSpeak=document.getElementById("s_auto").checked;
     SET.shuffle=document.getElementById("s_shuf").checked;
