@@ -101,7 +101,11 @@ main{flex:1;position:relative;overflow:hidden}
   text-align:center;color:var(--ink3);font-size:13px;line-height:1.6;background:var(--bg2)}
 .ans-lock.show{display:block}
 .ctrl.done{opacity:.45;pointer-events:none;filter:grayscale(.4)}
-.btn.btnNext{display:none;flex:0 0 auto;align-self:center;max-width:200px;margin:6px auto 2px;font-size:13px;padding:8px 22px}
+.nextRow{display:none;flex:0 0 auto;gap:8px;justify-content:center;align-items:center;padding:6px 16px 0}
+.nextRow.show{display:flex}
+.nextRow .btn{flex:0 1 auto;max-width:150px;margin:0;font-size:13px;padding:8px 18px}
+.nextRow .btn:disabled{opacity:.5}
+.btn.btnNext{display:inline-block;flex:0 1 auto;max-width:150px;margin:0;font-size:13px;padding:8px 18px}
 .sec{margin-top:14px}.sec h4{margin:0 0 5px;font-size:12px;color:var(--ink3);letter-spacing:1px}
 .sec p{margin:0;font-size:14px;line-height:1.65;color:var(--ink)}
 .kv{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -261,7 +265,10 @@ nav div.on{color:var(--pri)}
         <div class="btn warn" data-g="3"><i>◐</i>模糊</div>
         <div class="btn ok" data-g="5"><i>✓</i>认识</div>
       </div>
-      <button class="btn btnNext" id="btnNext">下一张 →</button>
+      <div class="nextRow" id="nextRow">
+        <button class="btn" id="btnWrong">✗ 记错了</button>
+        <button class="btn btnNext" id="btnNext">下一张 →</button>
+      </div>
       <div class="hint" id="hint">先回想中文名 · 选「会了/模糊/不会」揭晓 · 滑动进下一张</div>
     </section>
 
@@ -630,7 +637,7 @@ function speak(text, mode, manual){
 }
 
 /* ============ 学习队列 ============ */
-let queue=[], qi=0, cur=null, flipped=false, curAnswered=false;
+let queue=[], qi=0, cur=null, flipped=false, curAnswered=false, _gradeSnap=null;
 
 let CUR_BOOK = "全部";
 function scopeList(){ return CUR_BOOK==="全部"? ALL : ALL.filter(d=>d.g===CUR_BOOK); }
@@ -710,7 +717,9 @@ function renderStack(){
   const idx = qi % queue.length;
   cur = queue[idx]; flipped=false; curAnswered=false;
   const ctrl=document.querySelector(".ctrl"); if(ctrl) ctrl.classList.remove("done");
-  const nb=document.getElementById("btnNext"); if(nb) nb.style.display="none";
+  const nb=document.getElementById("nextRow"); if(nb) nb.classList.remove("show");
+  const bw=document.getElementById("btnWrong"); if(bw){ bw.disabled=false; bw.textContent="✗ 记错了"; }
+  _gradeSnap=null;
   const items = [cur, queue[(idx+1)%queue.length], queue[(idx+2)%queue.length]];
   items.forEach((d,i)=>{
     if(!d) return;
@@ -805,16 +814,40 @@ document.querySelectorAll(".ctrl .btn").forEach(b=>{
   b.addEventListener("click",()=>{
     if(!cur || curAnswered) return;
     const q = +b.dataset.g;
-    review(cur.id,q);
-    const s = st(cur.id);
+    const id = cur.id;
+    /* 记录评分前的状态，供「记错了」还原 */
+    _gradeSnap = { id:id, had:!!S[id], s:JSON.parse(JSON.stringify(S[id]||{})), newCount:MISC.todayNew };
+    review(id,q);
     if(q<3){ queue.push(cur); }
     revealAnswer();
     curAnswered = true;
     const ctrl=document.querySelector(".ctrl"); if(ctrl) ctrl.classList.add("done");
-    const nb=document.getElementById("btnNext"); if(nb) nb.style.display="block";
-    const h=document.getElementById("hint"); if(h) h.textContent="已揭晓 · 滑动或点「下一张」继续";
+    const row=document.getElementById("nextRow"); if(row) row.classList.add("show");
+    const bw=document.getElementById("btnWrong");
+    if(bw){
+      if(q===0){ bw.disabled=true; bw.textContent="已记为不会"; }
+      else { bw.disabled=false; bw.textContent="✗ 记错了"; }
+    }
+    const h=document.getElementById("hint"); if(h) h.textContent="已揭晓 · 记错了？点「✗ 记错了」改判，再点「下一张」继续";
   });
 });
+/* 记错了：还原本次评分，改记为不认识；不自动跳转 */
+document.getElementById("btnWrong").onclick=()=>{
+  const bw=document.getElementById("btnWrong");
+  if(!cur || !curAnswered || bw.disabled) return;
+  const id=cur.id;
+  if(_gradeSnap && _gradeSnap.id===id){
+    if(_gradeSnap.had) S[id]=_gradeSnap.s; else delete S[id];
+    MISC.todayNew=_gradeSnap.newCount;
+    save(K_MISC,MISC);
+  }
+  review(id,0);                                   // 按「不认识」重算：清零、很快再考、错次+1
+  if(queue.indexOf(cur)<0) queue.push(cur);       // 稍后重现
+  save(K_STATE,S);
+  bw.disabled=true; bw.textContent="✓ 已记为不认识";
+  const h=document.getElementById("hint"); if(h) h.textContent="已改为不认识 · 这张稍后会再考你 · 点「下一张」继续";
+  toast("已记为不认识，稍后会再考你");
+};
 const _bFlip=document.getElementById("btnFlip"); if(_bFlip) _bFlip.onclick=flip;
 const _bAuto=document.getElementById("btnAuto"); if(_bAuto) _bAuto.onclick=()=>{ if(cur) speak(cur.la,"la"); };
 const _bFav=document.getElementById("btnFav"); if(_bFav) _bFav.onclick=()=>{
