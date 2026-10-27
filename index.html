@@ -101,11 +101,13 @@ main{flex:1;position:relative;overflow:hidden}
   text-align:center;color:var(--ink3);font-size:13px;line-height:1.6;background:var(--bg2)}
 .ans-lock.show{display:block}
 .ctrl.done{opacity:.45;pointer-events:none;filter:grayscale(.4)}
-.nextRow{display:none;flex:0 0 auto;gap:8px;justify-content:center;align-items:center;padding:6px 16px 0}
+.nextRow{display:none;flex:0 0 auto;gap:12px;justify-content:center;align-items:center;padding:10px 16px 0}
 .nextRow.show{display:flex}
-.nextRow .btn{flex:0 1 auto;max-width:150px;margin:0;font-size:13px;padding:8px 18px}
-.nextRow .btn:disabled{opacity:.5}
-.btn.btnNext{display:inline-block;flex:0 1 auto;max-width:150px;margin:0;font-size:13px;padding:8px 18px}
+.nextRow .btn{flex:0 0 auto;min-width:160px;max-width:220px;height:54px;margin:0;font-size:16px;font-weight:800;
+  padding:0 28px;border-radius:15px;justify-content:center;box-shadow:0 4px 14px rgba(20,40,80,.10)}
+.nextRow .btn:disabled{opacity:.55;box-shadow:none}
+.btn.btnNext{display:flex;flex:0 0 auto;min-width:160px;max-width:220px;height:54px;margin:0;font-size:16px;
+  font-weight:800;padding:0 28px;border-radius:15px;justify-content:center}
 .sec{margin-top:14px}.sec h4{margin:0 0 5px;font-size:12px;color:var(--ink3);letter-spacing:1px}
 .sec p{margin:0;font-size:14px;line-height:1.65;color:var(--ink)}
 .kv{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -212,6 +214,7 @@ nav div.on{color:var(--pri)}
   header{padding:6px 14px 4px}
   .ctrl{padding:4px 14px calc(8px + var(--safe-b))}
   .btn{padding:9px 4px;font-size:11px}
+  .nextRow .btn,.btn.btnNext{font-size:14px;height:46px;min-width:120px;padding:0 20px}
   .face{padding:14px}
   .latin{font-size:19px;margin:10px 0 2px}
   .zhname{font-size:16px}
@@ -260,6 +263,7 @@ nav div.on{color:var(--pri)}
       <div class="stackWrap">
         <div class="stack" id="stack"></div>
       </div>
+      <div class="hint" id="hint">先回想中文名 · 选「会了/模糊/不会」揭晓 · 滑动进下一张</div>
       <div class="ctrl">
         <div class="btn bad" data-g="0"><i>✕</i>不会</div>
         <div class="btn warn" data-g="3"><i>◐</i>模糊</div>
@@ -269,7 +273,6 @@ nav div.on{color:var(--pri)}
         <button class="btn" id="btnWrong">✗ 记错了</button>
         <button class="btn btnNext" id="btnNext">下一张 →</button>
       </div>
-      <div class="hint" id="hint">先回想中文名 · 选「会了/模糊/不会」揭晓 · 滑动进下一张</div>
     </section>
 
     <!-- BOOKS -->
