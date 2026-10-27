@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>微生物拉丁名卡片 · MicroCards</title>
+<meta name="theme-color" content="#0f1729">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MicroCards">
+<link rel="apple-touch-icon" id="appleIcon">
+<link rel="icon" id="favicon">
+<link rel="manifest" id="manifestLink">
+<style>
+:root{
+  --bg:#f2f5fa; --bg2:#e8eef7; --card:#ffffff; --ink:#16233a; --ink2:#5a6b85; --ink3:#8a99ae;
+  --line:#e2e8f0; --pri:#2b6fe0; --pri-soft:#e8f0ff;
+  --b:#2f6fd0; --f:#12896c; --v:#7c4ddb; --p:#d97a17;
+  --ok:#12a06a; --warn:#e0a008; --bad:#e0543f;
+  --act:#0e9aa1; --arc:#9b4ddb; --cyan:#1f8fb0; --yeast:#e08a17; --mold:#a9743b; --basid:#7a9a3a; --algae:#1f9d6b;
+  --shadow:0 10px 30px rgba(20,40,80,.10),0 2px 8px rgba(20,40,80,.06);
+  --r:18px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1729; --bg2:#131d33; --card:#1a2439; --ink:#e8eef8; --ink2:#a3b1c8; --ink3:#6f7f97;
+    --line:#27324a; --pri:#5b95f5; --pri-soft:#1c2c49;
+    --b:#5b95f5; --f:#2fb894; --v:#a683ee; --p:#f0a24a;
+    --act:#43c4c0; --arc:#c08bef; --cyan:#4fb4d4; --yeast:#f0a24a; --mold:#cba06a; --basid:#a9c463; --algae:#5fd49b;
+    --shadow:0 12px 34px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--ink); overflow:hidden;
+  -webkit-font-smoothing:antialiased; user-select:none; -webkit-user-select:none;
+}
+#app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-t)}
+
+/* ---------- header ---------- */
+header{
+  flex:0 0 auto;padding:10px 16px 8px;display:flex;align-items:center;gap:10px;
+  background:linear-gradient(180deg,var(--bg) 70%,transparent);
+}
+.logo{font-size:17px;font-weight:800;letter-spacing:.3px;white-space:nowrap}
+.logo small{font-weight:600;color:var(--ink3);font-size:11px;margin-left:6px}
+.hdr-sp{flex:1}
+.iconbtn{
+  width:36px;height:36px;border:1px solid var(--line);background:var(--card);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:var(--ink)
+}
+.ring{position:relative;width:36px;height:36px;flex:0 0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--ink2)}
+
+/* ---------- views ---------- */
+main{flex:1;position:relative;overflow:hidden}
+.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 100px;display:none}
+.view.on{display:block}
+
+/* ---------- card stack ---------- */
+#study{display:none;flex-direction:column;overflow:hidden;padding:0}
+#study.on{display:flex;min-height:0}
+.stackWrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:4px 16px 22px;min-height:0}
+.stack{position:relative;width:100%;max-width:420px;height:100%;max-height:432px;min-height:0}
+.card{
+  position:absolute;inset:0;border-radius:var(--r);background:var(--card);box-shadow:var(--shadow);
+  overflow:hidden;will-change:transform;transition:transform .28s cubic-bezier(.2,.8,.3,1),opacity .28s;
+  border:1px solid var(--line);
+}
+.card.drag{transition:none}
+.card .inner{position:relative;width:100%;height:100%;transition:transform .45s cubic-bezier(.4,.1,.2,1);transform-style:preserve-3d}
+.card.flip .inner{transform:rotateY(180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  padding:18px;display:flex;flex-direction:column;overflow-y:auto;
+}
+.face.back{transform:rotateY(180deg)}
+.stripe{height:4px;border-radius:99px;width:46px;margin-bottom:12px}
+.gbact{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 9px;border-radius:99px;background:var(--pri-soft);color:var(--pri);align-self:flex-start}
+.latin{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;font-style:italic;font-size:clamp(21px,6.6vw,30px);line-height:1.22;font-weight:600;margin:14px 0 4px;word-break:break-word}
+.latin .sp{font-style:normal;font-weight:400;opacity:.75}
+.zhname{font-size:clamp(17px,4.8vw,21px);font-weight:800;margin:2px 0 0;letter-spacing:.5px}
+.alias{font-size:12px;color:var(--ink3);margin-top:3px}
+.rowlab{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--ink3);letter-spacing:1.2px;margin-top:16px}
+.syl{font-size:14px;line-height:1.9;background:var(--bg2);border-radius:12px;padding:9px 11px;margin-top:7px;letter-spacing:.2px;font-family:Georgia,serif}
+.syl b{color:var(--bad);font-weight:700;text-transform:none}
+.ph{font-size:14px;line-height:1.9;margin-top:7px;color:var(--ink2)}
+.ph b{color:var(--bad);font-weight:800}
+.spk{font-size:12px;color:var(--pri);border:none;background:transparent;font-weight:700;cursor:pointer;padding:0}
+.spacer{flex:1}
+.fcenter{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+.hint{font-size:11px;color:var(--ink3);text-align:center;padding:8px 0 2px}
+.sec{margin-top:14px}.sec h4{margin:0 0 5px;font-size:12px;color:var(--ink3);letter-spacing:1px}
+.sec p{margin:0;font-size:14px;line-height:1.65;color:var(--ink)}
+.kv{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:11px;padding:4px 8px;border-radius:8px;background:var(--bg2);color:var(--ink2);font-weight:600}
+.mnbox{margin-top:14px;background:var(--pri-soft);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.6;color:var(--ink)}
+.mnbox b{color:var(--pri)}
+.fav{position:absolute;right:12px;top:12px;font-size:20px;cursor:pointer;z-index:5;line-height:1}
+
+/* ---------- controls ---------- */
+.ctrl{flex:0 0 auto;display:flex;gap:8px;padding:6px 16px calc(10px + var(--safe-b));justify-content:center}
+.btn{
+  flex:1;max-width:130px;border:1px solid var(--line);background:var(--card);border-radius:14px;
+  padding:11px 4px;font-size:12px;font-weight:800;color:var(--ink2);cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;gap:3px;box-shadow:0 2px 6px rgba(20,40,80,.05)
+}
+.btn i{font-style:normal;font-size:17px}
+.btn:active{transform:scale(.96)}
+.btn.bad{color:var(--bad)} .btn.warn{color:var(--warn)} .btn.ok{color:var(--ok)}
+.btn.pri{background:var(--pri);color:#fff;border-color:transparent}
+.mini{display:flex;justify-content:center;gap:8px;padding:0 16px 8px}
+.mini button{border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:99px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer}
+
+/* ---------- common ---------- */
+.cardbox{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.ttl{font-size:13px;font-weight:800;color:var(--ink3);letter-spacing:1px;margin:16px 0 8px}
+.search{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:11px 13px;font-size:14px;color:var(--ink);outline:none}
+.filters{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;-webkit-overflow-scrolling:touch}
+.filters::-webkit-scrollbar{display:none}
+.fbtn{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.fbtn.on{background:var(--pri);color:#fff;border-color:transparent}
+.item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-bottom:1px solid var(--line);cursor:pointer}
+.item:last-child{border-bottom:none}
+.item .l{font-family:Georgia,serif;font-style:italic;font-size:15px;font-weight:600}
+.item .z{font-size:12px;color:var(--ink3);margin-top:2px}
+.dot{width:8px;height:8px;border-radius:99px;flex:0 0 auto}
+.star{font-size:16px;flex:0 0 auto;cursor:pointer}
+.empty{text-align:center;color:var(--ink3);padding:50px 20px;font-size:14px;line-height:1.8}
+.big{font-size:34px;font-weight:900;letter-spacing:-.5px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat .n{font-size:22px;font-weight:900}
+.stat .t{font-size:11px;color:var(--ink3);margin-top:2px}
+.bar{height:8px;border-radius:99px;background:var(--bg2);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:99px}
+.prow{margin-bottom:12px}
+.prow .pl{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+
+/* ---------- quiz ---------- */
+.qwrap{max-width:420px;margin:0 auto}
+.qprog{font-size:12px;color:var(--ink3);text-align:center;margin-bottom:10px}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 18px;box-shadow:var(--shadow);text-align:center;min-height:150px;display:flex;flex-direction:column;justify-content:center}
+.qword{font-family:Georgia,serif;font-style:italic;font-size:26px;font-weight:600;line-height:1.3}
+.qword:not(.i){font-family:inherit;font-style:normal;font-weight:800}
+.qsub{font-size:12px;color:var(--ink3);margin-top:8px}
+.opts{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.opt{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:13px 15px;font-size:15px;font-weight:600;text-align:left;cursor:pointer;color:var(--ink)}
+.opt:active{transform:scale(.99)}
+.opt.right{background:rgba(18,160,106,.13);border-color:var(--ok);color:var(--ok)}
+.opt.wrong{background:rgba(224,84,63,.13);border-color:var(--bad);color:var(--bad)}
+.opt.dim{opacity:.45}
+
+/* ---------- nav ---------- */
+nav{
+  flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--card);
+  padding-bottom:var(--safe-b)
+}
+nav div{flex:1;padding:8px 0 7px;text-align:center;font-size:10px;color:var(--ink3);font-weight:700;cursor:pointer}
+nav div i{display:block;font-style:normal;font-size:19px;margin-bottom:2px}
+nav div.on{color:var(--pri)}
+
+/* ---------- modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(10,20,40,.5);display:none;align-items:flex-end;justify-content:center;z-index:99}
+.mask.on{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:16px 16px calc(24px + var(--safe-b));max-height:88vh;overflow-y:auto}
+.sheet h3{margin:2px 0 14px;font-size:16px}
+.fld{margin-bottom:11px}
+.fld label{font-size:11px;font-weight:800;color:var(--ink3);display:block;margin-bottom:5px}
+.fld input,.fld textarea,.fld select{
+  width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 12px;
+  font-size:14px;color:var(--ink);outline:none;font-family:inherit
+}
+.fld textarea{min-height:64px;resize:vertical;user-select:text;-webkit-user-select:text}
+.sw{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:9px;font-size:14px;font-weight:600}
+.sw input{width:44px;height:26px;appearance:none;-webkit-appearance:none;background:var(--line);border-radius:99px;position:relative;transition:.2s;cursor:pointer}
+.sw input:checked{background:var(--pri)}
+.sw input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:99px;background:#fff;transition:.2s}
+.sw input:checked::after{left:21px}
+.row2{display:flex;gap:9px}
+.row2 .btn{max-width:none}
+.closebar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.closebar b{font-size:16px}
+.x{font-size:22px;color:var(--ink3);cursor:pointer;line-height:1}
+.toast{position:fixed;left:50%;top:calc(62px + var(--safe-t));transform:translateX(-50%) translateY(-12px);background:rgba(20,35,60,.94);color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:200;max-width:80%;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.tagline{font-size:11px;color:var(--ink3);text-align:center;margin-top:14px;line-height:1.7}
+
+@media (max-width:360px){
+  .logo small{display:none}
+  .logo{font-size:16px}
+  header{gap:6px}
+}
+@media (max-height:700px){
+  .hint{display:none}
+  header{padding:6px 14px 4px}
+  .ctrl{padding:4px 14px calc(8px + var(--safe-b))}
+  .btn{padding:9px 4px;font-size:11px}
+  .face{padding:14px}
+  .latin{font-size:19px;margin:10px 0 2px}
+  .zhname{font-size:16px}
+  .rowlab{margin-top:10px;font-size:10px;letter-spacing:1px}
+  .syl{font-size:12.5px;padding:7px 9px;margin-top:5px}
+  .ph{font-size:12.5px;margin-top:5px}
+  .sec{margin-top:10px}
+  .sec p{font-size:13px;line-height:1.55}
+  .mnbox{font-size:12px;padding:8px 10px;margin-top:10px}
+}
+@media (max-height:600px){
+  .stackWrap{padding:2px 12px 14px}
+  .latin{font-size:17.5px}
+  .zhname{font-size:15px}
+  .stripe{height:3px;width:36px;margin-bottom:8px}
+  .gbact{font-size:10px;padding:3px 7px}
+  .ctrl .btn i{font-size:15px}
+}
+/* ---------- 词书 ---------- */
+.booktag{font-size:12px;font-weight:800;color:var(--ink2);text-align:center;padding:8px 0 2px;letter-spacing:.5px}
+.book{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.book .b-bar{height:6px;border-radius:99px;margin:-14px -16px 12px;background:var(--bg2)}
+.book .b-row{display:flex;align-items:center;gap:9px}
+.book .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.book .b-name{font-size:16px;font-weight:800}
+.book .b-count{margin-left:auto;font-size:12px;color:var(--ink3);font-weight:700}
+.book .b-sub{font-size:12px;color:var(--ink2);margin-top:6px}
+.book .b-go{justify-content:center}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">MicroCards<small>微生物拉丁名</small></div>
+    <div class="hdr-sp"></div>
+    <div class="ring" id="ring"><svg width="36" height="36"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--line)" stroke-width="4"/><circle id="ringFg" cx="18" cy="18" r="15" fill="none" stroke="var(--pri)" stroke-width="4" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="94.2"/></svg><span class="num" id="ringNum">0</span></div>
+    <div class="iconbtn" id="btnSearch" title="搜微生物拉丁名">🔍</div>
+    <div class="iconbtn" id="btnSet">⚙</div>
+  </header>
+
+  <main>
+    <!-- STUDY -->
+    <section id="study" class="view on">
+      <div class="booktag" id="bookTag">全部词书</div>
+      <div class="stackWrap">
+        <div class="stack" id="stack"></div>
+      </div>
+      <div class="ctrl">
+        <div class="btn bad" data-g="0"><i>✕</i>不会</div>
+        <div class="btn warn" data-g="3"><i>◐</i>模糊</div>
+        <div class="btn ok" data-g="5"><i>✓</i>认识</div>
+      </div>
+      <div class="hint">左右滑动切换 · 点击卡片翻面 · 右上角 ☆ 收藏</div>
+    </section>
+
+    <!-- BOOKS -->
+    <section id="books" class="view">
+      <div class="ttl">选择词书</div>
+      <div id="bookList"></div>
+      <div class="tagline">每本词书独立记录掌握进度 · 词条由 AI 整理，请以诸葛健《微生物学》（第二版）教材为准</div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="view">
+      <div class="qwrap">
+        <div class="row2" style="margin-bottom:12px">
+          <button class="btn pri" id="qStart" style="max-width:none">开始测验</button>
+          <button class="btn" id="qMode" style="max-width:none;flex:0 0 130px">拉 → 中</button>
+        </div>
+        <div id="qBody"></div>
+      </div>
+    </section>
+
+    <!-- LIB -->
+    <section id="lib" class="view">
+      <input class="search" id="q" placeholder="搜拉丁名 / 中文名（如 Aspergillus、曲霉、Escherichia）…">
+      <div class="filters" id="filters"></div>
+      <div class="ttl" id="libCount"></div>
+      <div class="cardbox" id="list" style="padding:0"></div>
+      <div style="text-align:center;margin-top:14px;display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+        <button class="btn pri" id="btnStudyFilter" style="display:inline-flex;max-width:220px">▶ 用当前筛选练习</button>
+        <button class="btn" id="btnAdd" style="display:inline-flex;max-width:200px">＋ 添加词条</button>
+      </div>
+      <div class="tagline">点击词条查看详情，可一键跳到卡片背诵 / 右侧 ★ 收藏</div>
+    </section>
+
+    <!-- STATS -->
+    <section id="stats" class="view">
+      <div class="grid3" id="sTop"></div>
+      <div class="ttl">掌握进度</div>
+      <div class="cardbox" id="sProg"></div>
+      <div class="ttl">今日计划</div>
+      <div class="cardbox" id="sToday"></div>
+      <div class="ttl">数据管理</div>
+      <div class="cardbox">
+        <div class="row2">
+          <button class="btn" id="btnExport">⬇ 导出备份</button>
+          <button class="btn" id="btnImport">⬆ 导入备份</button>
+        </div>
+        <div class="row2" style="margin-top:9px">
+          <button class="btn" id="btnCsv">⇪ CSV 导入词条</button>
+          <button class="btn bad" id="btnReset">⟲ 重置进度</button>
+        </div>
+        <input type="file" id="fileIn" accept=".json,.csv,text/csv" style="display:none">
+      </div>
+      <div class="tagline">进度保存在本机浏览器，清理浏览器数据会丢失，建议定期导出备份</div>
+    </section>
+  </main>
+
+  <nav>
+    <div data-v="books"><i>📖</i>词书</div>
+    <div class="on" data-v="study"><i>🃏</i>学习</div>
+    <div data-v="quiz"><i>🎯</i>测验</div>
+    <div data-v="lib"><i>📚</i>词库</div>
+    <div data-v="stats"><i>📊</i>统计</div>
+  </nav>
+</div>
+
+<div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 数据 ============ */
+const DATA = [
+  {"la": "Escherichia coli", "zh": "大肠埃希菌（大肠杆菌）", "g": "细菌", "tag": "G⁻杆菌", "syl": "E·sche·RI·chi·a  CO·li", "ph": "埃舍「里」希亚 「科」利", "fe": "革兰阴性短杆菌，周生鞭毛，发酵乳糖，IMViC 为「＋＋－－」，肠道正常菌群。", "us": "基因工程经典模式菌与表达宿主；也可致条件性感染（尿路感染等）。", "mn": "coli＝结肠；基因工程万能打工菌"},
+  {"la": "Bacillus subtilis", "zh": "枯草芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  sub·TI·lis", "ph": "巴「西」鲁斯 苏布「提」利斯", "fe": "革兰阳性杆菌，好氧，可形成抗逆性强的芽孢，分泌大量胞外酶。", "us": "蛋白酶、淀粉酶等酶制剂生产菌，也是芽孢与基因工程模式菌。", "mn": "subtilis＝柔/枯草；产酶小能手"},
+  {"la": "Bacillus thuringiensis", "zh": "苏云金芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  thu·rin·GI·en·sis", "ph": "巴「西」鲁斯 图林「吉」恩西斯", "fe": "革兰阳性芽孢杆菌，芽孢期产生伴胞晶体（δ-内毒素 / Bt 毒素），对昆虫专一毒性。", "us": "微生物杀虫剂 Bt 制剂来源，广泛用于绿色生物防治。", "mn": "苏云金 → Bt 晶体毒素 → 杀虫"},
+  {"la": "Bacillus licheniformis", "zh": "地衣芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  li·che·ni·FOR·mis", "ph": "巴「西」鲁斯 利凯尼「福」尔米斯", "fe": "革兰阳性芽孢杆菌，耐碱耐热，分泌碱性蛋白酶与杆菌肽。", "us": "工业化生产碱性蛋白酶（加酶洗衣粉用酶）、杆菌肽。", "mn": "地衣状 → 耐碱蛋白酶"},
+  {"la": "Bacillus megaterium", "zh": "巨大芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  me·ga·TE·ri·um", "ph": "巴「西」鲁斯 梅加「泰」里乌姆", "fe": "革兰阳性大杆菌，能形成大型芽孢，好氧，胞内有异染颗粒。", "us": "用于维生素和酶生产，也是研究芽孢形态的模式菌。", "mn": "mega＝巨大；个头最大的芽孢杆菌之一"},
+  {"la": "Bacillus cereus", "zh": "蜡样芽孢杆菌", "g": "细菌", "tag": "G⁺芽孢杆菌", "syl": "Ba·CIL·lus  ce·RE·us", "ph": "巴「西」鲁斯 塞「雷」乌斯", "fe": "革兰阳性芽孢杆菌，菌落呈蜡样，产生肠毒素。", "us": "可引起食物中毒；也是酶制剂与益生菌研究对象。", "mn": "cereus＝蜡样；隔夜饭的隐患"},
+  {"la": "Lactobacillus", "zh": "乳酸杆菌（属）", "g": "细菌", "tag": "G⁺无芽孢杆菌", "syl": "Lac·to·ba·CIL·lus", "ph": "拉克托巴「西」鲁斯", "fe": "革兰阳性无芽孢杆菌，厌氧或兼性厌氧，将糖发酵为乳酸。", "us": "酸奶、泡菜等乳酸发酵发酵剂；代表有植物、干酪、保加利亚乳杆菌。", "mn": "lacto＝乳酸；酸奶灵魂菌"},
+  {"la": "Lactobacillus bulgaricus", "zh": "保加利亚乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  bul·GA·ri·cus", "ph": "拉克托巴「西」鲁斯 布尔「加」里库斯", "fe": "革兰阳性杆菌，专性同型乳酸发酵，最适温度约 45 ℃。", "us": "酸奶（与嗜热链球菌共发酵）的核心菌种。", "mn": "保加利亚酸奶的命名菌"},
+  {"la": "Lactobacillus plantarum", "zh": "植物乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  plan·TA·rum", "ph": "拉克托巴「西」鲁斯 普兰「塔」鲁姆", "fe": "革兰阳性杆菌，能发酵多种糖，耐酸，广泛存在于植物表面。", "us": "蔬菜、谷物发酵（酸菜、饲料青贮）常用发酵剂。", "mn": "plantarum＝植物；腌菜高手"},
+  {"la": "Lactobacillus casei", "zh": "干酪乳杆菌", "g": "细菌", "tag": "G⁺杆菌", "syl": "Lac·to·ba·CIL·lus  CA·se·i", "ph": "拉克托巴「西」鲁斯 「卡」塞伊", "fe": "革兰阳性杆菌，耐酸耐胆盐，常见于发酵乳与肠道。", "us": "干酪发酵及益生菌制剂常用菌株。", "mn": "casei＝干酪；奶酪里的菌"},
+  {"la": "Streptococcus thermophilus", "zh": "嗜热链球菌", "g": "细菌", "tag": "G⁺球菌", "syl": "Strep·to·COC·cus  ther·mo·PHI·lus", "ph": "斯特雷普托「科」库斯 特莫「菲」鲁斯", "fe": "革兰阳性链球菌，最适温度约 40–45 ℃，同型乳酸发酵。", "us": "与保加利亚乳杆菌共发酵生产酸奶。", "mn": "thermo＝耐热；酸奶搭档"},
+  {"la": "Acetobacter aceti", "zh": "醋化醋酸杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·ce·to·BAC·ter  a·CE·ti", "ph": "阿塞托「巴」克特 阿「塞」蒂", "fe": "革兰阴性好氧杆菌，具乙醇/乙酸脱氢酶，把乙醇氧化为乙酸。", "us": "食醋酿造（醋酸发酵）的关键菌。", "mn": "aceti＝醋；酒变醋靠它"},
+  {"la": "Gluconobacter oxydans", "zh": "氧化葡萄糖酸杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Glu·co·no·BAC·ter  o·xy·DANS", "ph": "格卢科诺「巴」克特 奥克西「丹」斯", "fe": "革兰阴性好氧杆菌，不完全氧化强，把葡萄糖氧化为葡萄糖酸/2-KGA。", "us": "维生素 C 两步发酵法的关键菌株（产 2-酮基-L-古龙酸）。", "mn": "氧化葡萄糖 → VC 前体"},
+  {"la": "Corynebacterium glutamicum", "zh": "谷氨酸棒状杆菌", "g": "细菌", "tag": "G⁺棒状杆菌", "syl": "Co·ry·ne·bac·TE·ri·um  glu·ta·mi·CUM", "ph": "科里内巴克「泰」里乌姆 格卢塔米「库」姆", "fe": "革兰阳性不规则棒状杆菌，好氧，营养缺陷型育种的典型对象。", "us": "味精（谷氨酸钠）及赖氨酸等多种氨基酸发酵生产菌。", "mn": "glutamicum＝谷氨酸；味精工厂主力"},
+  {"la": "Brevibacterium flavum", "zh": "黄色短杆菌", "g": "细菌", "tag": "G⁺短杆菌", "syl": "Bre·vi·bac·TE·ri·um  FLA·vum", "ph": "布雷维巴克「泰」里乌姆 「弗」拉武姆", "fe": "革兰阳性短杆菌，常作氨基酸高产育种亲本。", "us": "赖氨酸、谷氨酸等氨基酸发酵的重要生产菌。", "mn": "brevis＝短；黄色短棒菌"},
+  {"la": "Rhizobium", "zh": "根瘤菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Rhi·ZO·bi·um", "ph": "里「佐」比乌姆", "fe": "革兰阴性杆菌，与豆科植物共生形成根瘤，行固氮作用。", "us": "生物固氮、绿肥与豆科作物增产的核心微生物。", "mn": "rhizo＝根；根瘤固氮专家"},
+  {"la": "Agrobacterium tumefaciens", "zh": "根癌土壤杆菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·gro·bac·TE·ri·um  tu·me·fa·CI·ens", "ph": "阿格罗巴克「泰」里乌姆 图梅法「西」恩斯", "fe": "革兰阴性杆菌，经 Ti 质粒将 DNA 转入植物引起冠瘿瘤。", "us": "Ti 质粒是植物基因工程的天然载体。", "mn": "tumefaciens＝致瘤；植物转基因载体"},
+  {"la": "Azotobacter", "zh": "固氮菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "A·zo·to·BAC·ter", "ph": "阿佐托「巴」克特", "fe": "革兰阴性大杆菌，好氧，自由生活能固定大气氮，胞内有 PHB 颗粒。", "us": "生物肥料、固氮研究与 PHB 可降解材料来源。", "mn": "azo＝氮；自由固氮好氧菌"},
+  {"la": "Nitrobacter", "zh": "硝化杆菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Ni·tro·BAC·ter", "ph": "尼特罗「巴」克特", "fe": "革兰阴性小杆菌，化能自养，把亚硝酸氧化为硝酸获能。", "us": "土壤硝化作用（氮循环）的关键菌，污水生物脱氮用。", "mn": "nitro＝氮；硝化第二步"},
+  {"la": "Nitrosomonas", "zh": "亚硝化单胞菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Ni·tro·so·MO·nas", "ph": "尼特罗索「莫」纳斯", "fe": "革兰阴性杆菌，化能自养，把氨氧化为亚硝酸。", "us": "硝化作用第一步，与 Nitrobacter 共同完成硝化。", "mn": "nitroso＝亚硝；硝化第一步"},
+  {"la": "Pseudomonas", "zh": "假单胞菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas", "ph": "普塞多「莫」纳斯", "fe": "革兰阴性杆菌，端生鞭毛，好氧，能降解多种有机物（广食性）。", "us": "环境污染物生物降解、污水处理的重要菌；部分为人畜病原菌。", "mn": "pseudo＝假；代谢全能选手"},
+  {"la": "Pseudomonas fluorescens", "zh": "荧光假单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas  fluo·re·SCENS", "ph": "普塞多「莫」纳斯 弗洛雷「斯」岑斯", "fe": "革兰阴性杆菌，产荧光水溶性色素（绿脓菌素一类），好氧。", "us": "冷藏食品腐败常见菌；也用于生物防治与废水处理。", "mn": "fluorescens＝荧光；冷库里的光"},
+  {"la": "Pseudomonas aeruginosa", "zh": "铜绿假单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Pseu·do·MO·nas  ae·ru·gi·NO·sa", "ph": "普塞多「莫」纳斯 埃鲁吉「诺」萨", "fe": "革兰阴性杆菌，产青绿色绿脓菌素与荧光色素，条件致病。", "us": "医院常见机会致病菌；也用于酶与次生代谢物研究。", "mn": "aeruginosa＝铜绿；绿脓菌"},
+  {"la": "Staphylococcus aureus", "zh": "金黄色葡萄球菌", "g": "细菌", "tag": "G⁺球菌", "syl": "Sta·phy·lo·COC·cus  AU·re·us", "ph": "斯塔菲洛「科」库斯 「奥」雷乌斯", "fe": "革兰阳性葡萄串状球菌，产金黄色色素，耐高盐，产肠毒素。", "us": "食品污染与化脓感染常见菌；也是酶/蛋白表达研究对象。", "mn": "aureus＝金色；葡萄串金球菌"},
+  {"la": "Micrococcus", "zh": "微球菌（属）", "g": "细菌", "tag": "G⁺球菌", "syl": "Mi·cro·COC·cus", "ph": "米克罗「科」库斯", "fe": "革兰阳性小球菌，严格好氧，常分布于皮肤与空气尘埃。", "us": "常用于环境监测与某些氨基酸/酶生产。", "mn": "micros＝小；迷你球菌"},
+  {"la": "Clostridium acetobutylicum", "zh": "丙酮丁醇梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  a·ce·to·bu·ty·LI·cum", "ph": "克洛斯特里「迪」乌姆 阿塞托布提「利」库姆", "fe": "革兰阳性大杆菌，严格厌氧，产芽孢，行丙酮-丁醇发酵。", "us": "工业丙酮丁醇（ABE）发酵经典菌种。", "mn": "acetobutylicum＝丙酮丁醇；ABE 发酵菌"},
+  {"la": "Clostridium botulinum", "zh": "肉毒梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  bo·tu·LI·num", "ph": "克洛斯特里「迪」乌姆 博图「利」努姆", "fe": "革兰阳性厌氧芽孢杆菌，产肉毒毒素（最强神经毒素之一）。", "us": "罐头食品安全的重点防控对象；毒素也用于医药。", "mn": "botulinum＝香肠；罐头杀手"},
+  {"la": "Clostridium tetani", "zh": "破伤风梭菌", "g": "细菌", "tag": "G⁺芽孢厌氧", "syl": "Clo·stri·di·UM  te·TA·ni", "ph": "克洛斯特里「迪」乌姆 特「塔」尼", "fe": "革兰阳性厌氧芽孢杆菌，芽孢呈鼓槌状，产破伤风痉挛毒素。", "us": "深而窄伤口易致破伤风；类毒素用于疫苗。", "mn": "tetani＝强直；鼓槌芽孢菌"},
+  {"la": "Desulfovibrio", "zh": "脱硫弧菌（属）", "g": "细菌", "tag": "G⁻厌氧", "syl": "De·sul·fo·VI·brio", "ph": "德斯尔福「维」布里奥", "fe": "革兰阴性弧形杆菌，严格厌氧，以硫酸盐为电子受体（ sulfate reduction）。", "us": "造成金属与混凝土管道的硫酸盐腐蚀；参与硫循环。", "mn": "desulfo＝脱硫；腐蚀管道菌"},
+  {"la": "Thiobacillus", "zh": "硫杆菌（属）", "g": "细菌", "tag": "G⁻化能自养", "syl": "Thi·o·ba·CIL·lus", "ph": "希奥巴「西」鲁斯", "fe": "革兰阴性杆菌，氧化硫/硫代硫酸获能，化能自养。", "us": "矿石生物浸出（浸铜、浸铀）、脱硫研究用。", "mn": "thio＝硫；吃硫的菌"},
+  {"la": "Zymomonas mobilis", "zh": "运动发酵单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Zy·mo·MO·nas  mo·BI·lis", "ph": "兹莫「莫」纳斯 莫「比」利斯", "fe": "革兰阴性杆菌，靠 ED 途径将糖高效发酵为乙醇。", "us": "潜在的高效乙醇发酵菌（比酵母理论得率高）。", "mn": "zymo＝发酵；酒精快产菌"},
+  {"la": "Xanthomonas campestris", "zh": "野油菜黄单胞菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Xan·tho·MO·nas  cam·pe·stris", "ph": "赞托「莫」纳斯 坎佩「斯」特里斯", "fe": "革兰阴性杆菌，产胞外多糖黄原胶（xanthan）。", "us": "工业黄原胶（食品增稠剂）的生产菌。", "mn": "xantho＝黄；黄原胶之母"},
+  {"la": "Bifidobacterium", "zh": "双歧杆菌（属）", "g": "细菌", "tag": "G⁺厌氧", "syl": "Bi·fi·do·bac·TE·ri·um", "ph": "比菲多巴克「泰」里乌姆", "fe": "革兰阳性分叉杆菌，严格厌氧，母乳喂养婴儿肠道优势菌。", "us": "重要益生菌，调节肠道微生态、增强免疫。", "mn": "bifid＝两裂；肠道好菌"},
+  {"la": "Propionibacterium", "zh": "丙酸杆菌（属）", "g": "细菌", "tag": "G⁺厌氧", "syl": "Pro·pi·o·ni·bac·TE·ri·um", "ph": "普罗皮奥尼巴克「泰」里乌姆", "fe": "革兰阳性多形态杆菌，厌氧，发酵产丙酸与乙酸。", "us": "瑞士干酪孔眼（产 CO₂/丙酸）与益生菌（痤疮丙酸杆菌）相关。", "mn": "propion＝丙酸；干酪孔眼菌"},
+  {"la": "Serratia marcescens", "zh": "粘质沙雷氏菌", "g": "细菌", "tag": "G⁻杆菌", "syl": "Ser·ra·ti·a  mar·ce·SCENS", "ph": "塞拉「提」亚 马尔塞「斯」岑斯", "fe": "革兰阴性杆菌，产红色灵菌素（prodigiosin）色素，常污染医院环境。", "us": "实验室与卫生指示菌；也产胞外酶与色素。", "mn": "marcescens＝腐败；红色污染菌"},
+  {"la": "Salmonella", "zh": "沙门氏菌（属）", "g": "细菌", "tag": "G⁻杆菌", "syl": "Sal·mo·NEL·la", "ph": "萨尔莫「内」拉", "fe": "革兰阴性周毛杆菌，多数能运动，兼性厌氧，部分致食物中毒。", "us": "食物（蛋、肉）安全重点防控的人畜共患病原菌。", "mn": "沙门＝伤寒/肠炎；食品安全盯防菌"},
+  {"la": "Streptomyces griseus", "zh": "灰色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  gri·SE·us", "ph": "斯特雷普托「迈」塞斯 格里斯「塞」乌斯", "fe": "革兰阳性丝状放线菌，基内菌丝分支，产灰色气生孢子链。", "us": "产链霉素、灰霉素等抗生素；放线菌模式种。", "mn": "griseus＝灰；链霉素老家"},
+  {"la": "Streptomyces aureofaciens", "zh": "金色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  au·re·o·FA·ci·ens", "ph": "斯特雷普托「迈」塞斯 奥雷奥「法」西恩斯", "fe": "革兰阳性丝状菌，产金黄色色素与四环素类抗生素。", "us": "金霉素（氯四环素）等四环素类的生产菌。", "mn": "aureus＝金；四环素来源"},
+  {"la": "Streptomyces rimosus", "zh": "龟裂链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ri·MO·sus", "ph": "斯特雷普托「迈」塞斯 里「莫」苏斯", "fe": "革兰阳性丝状菌，菌落表面龟裂状，产土霉素。", "us": "氧四环素（土霉素）的生产菌。", "mn": "rimosus＝龟裂；土霉素菌"},
+  {"la": "Streptomyces hygroscopicus", "zh": "吸水链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  hy·gro·sco·pi·CUS", "ph": "斯特雷普托「迈」塞斯 希格罗斯科皮「库」斯", "fe": "革兰阳性丝状菌，气生菌丝吸水状，产多种次生代谢物。", "us": "产春日霉素、雷帕霉素等，生物防治与医药用。", "mn": "hygroscopicus＝吸水；农药源菌"},
+  {"la": "Saccharopolyspora erythraea", "zh": "红霉糖多孢菌（红霉素链霉菌）", "g": "放线菌", "tag": "放线菌", "syl": "Sa·ccha·ro·po·ly·SPO·ra  e·ry·thrae·a", "ph": "萨克哈罗波利「斯」波拉 埃里特雷「阿」", "fe": "原称红霉素链霉菌，革兰阳性丝状放线菌，产大环内酯。", "us": "红霉素等抗生素的生产菌。", "mn": "erythraea＝红；红霉素生产者"},
+  {"la": "Streptomyces noursei", "zh": "诺尔斯链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  nour·SE·i", "ph": "斯特雷普托「迈」塞斯 努尔「塞」伊", "fe": "革兰阳性丝状菌，产制霉菌素等抗真菌抗生素。", "us": "多烯类抗生素（如制霉菌素）来源。", "mn": "诺尔斯；抗真菌抗生素"},
+  {"la": "Streptomyces kanamyceticus", "zh": "卡那霉素链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ka·na·my·ce·TI·cus", "ph": "斯特雷普托「迈」塞斯 卡纳米塞「提」库斯", "fe": "革兰阳性丝状菌，产氨基糖苷类抗生素卡那霉素。", "us": "卡那霉素生产菌，用于抗感染与筛选标记。", "mn": "kanamycin；卡那霉素源"},
+  {"la": "Streptomyces venezuelae", "zh": "委内瑞拉链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  ve·ne·zu·e·LAE", "ph": "斯特雷普托「迈」塞斯 韦内苏埃「莱」", "fe": "革兰阳性丝状菌，产氯霉素等。", "us": "氯霉素的发现与生产菌之一。", "mn": "venezuelae＝委内瑞拉；氯霉素源"},
+  {"la": "Streptomyces albus", "zh": "白色链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  AL·bus", "ph": "斯特雷普托「迈」塞斯 「阿」尔武斯", "fe": "革兰阳性丝状菌，气生菌丝白色，产多种抗生素。", "us": "产白色霉素等，抗生素筛选常见种。", "mn": "albus＝白；白孢子链霉"},
+  {"la": "Streptomyces lavendulae", "zh": "淡紫链霉菌", "g": "放线菌", "tag": "放线菌", "syl": "Strep·to·MY·ces  la·ven·du·LAE", "ph": "斯特雷普托「迈」塞斯 拉文杜「莱」", "fe": "革兰阳性丝状菌，气生菌丝淡紫色，产链丝菌素等。", "us": "多种抗生素与活性物质的来源种。", "mn": "lavendulae＝薰衣草紫；紫孢子"},
+  {"la": "Micromonospora", "zh": "小单孢菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Mi·cro·mo·NO·spo·ra", "ph": "米克罗莫「诺」斯波拉", "fe": "放线菌，菌丝无横隔，孢子单个着生于孢子梗顶端。", "us": "产庆大霉素等氨基糖苷类抗生素。", "mn": "micro＋mono＝小单孢；庆大霉素家"},
+  {"la": "Nocardia", "zh": "诺卡氏菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "No·car·DI·a", "ph": "诺卡尔「迪」亚", "fe": "放线菌，菌丝易断裂成杆状，弱抗酸，部分致病。", "us": "产利福霉素等；也用于环境污染物降解。", "mn": "诺卡；分枝断裂菌"},
+  {"la": "Frankia", "zh": "弗兰克氏菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Fran·KI·a", "ph": "弗兰「基」亚", "fe": "放线菌，与非豆科木本植物（如杨梅、沙棘）共生固氮。", "us": "非豆科植物的共生固氮菌，改良瘠薄土壤。", "mn": "Frank 命名；木本固氮菌"},
+  {"la": "Thermoactinomyces", "zh": "高温放线菌（属）", "g": "放线菌", "tag": "放线菌", "syl": "Ther·mo·ac·ti·no·MY·ces", "ph": "特莫阿克蒂诺「迈」塞斯", "fe": "嗜热放线菌，形成耐高温芽孢，常存在于堆肥、土壤。", "us": "高温堆肥与高温酶研究的来源菌。", "mn": "thermo＋actinomyces＝耐热放线菌"},
+  {"la": "Methanobacterium", "zh": "甲烷杆菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·bac·TE·ri·um", "ph": "梅塔诺巴克「泰」里乌姆", "fe": "严格厌氧古菌，杆状，以 H₂/CO₂ 或甲酸产甲烷。", "us": "厌氧消化（沼气）产甲烷的核心功能菌。", "mn": "methano＝甲烷；沼气制造机"},
+  {"la": "Methanococcus", "zh": "甲烷球菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·COC·cus", "ph": "梅塔诺「科」库斯", "fe": "严格厌氧古菌，球状，产甲烷，多见于海底热液与厌氧环境。", "us": "厌氧消化与极端环境产甲烷研究。", "mn": "甲烷球菌；海底产气"},
+  {"la": "Methanosarcina", "zh": "甲烷八叠球菌（属）", "g": "古菌", "tag": "产甲烷古菌", "syl": "Me·tha·no·sar·CI·na", "ph": "梅塔诺萨尔「奇」纳", "fe": "严格厌氧古菌，可呈八叠球状，底物利用最广的产甲烷菌。", "us": "厌氧消化中转化乙酸/甲醇为甲烷的关键菌。", "mn": "sarcina＝八叠；最全能产甲烷菌"},
+  {"la": "Halobacterium", "zh": "嗜盐杆菌（属）", "g": "古菌", "tag": "极端嗜盐古菌", "syl": "Ha·lo·bac·TE·ri·um", "ph": "哈洛巴克「泰」里乌姆", "fe": "极端嗜盐古菌，需高盐（~3.5 M NaCl）才能生长，膜含细菌视紫红质。", "us": "盐湖、盐场微生物；菌紫质用于光合蛋白与生物电子研究。", "mn": "halo＝盐；紫膜盐菌"},
+  {"la": "Halococcus", "zh": "嗜盐球菌（属）", "g": "古菌", "tag": "极端嗜盐古菌", "syl": "Ha·lo·COC·cus", "ph": "哈洛「科」库斯", "fe": "极端嗜盐古菌，球状，具厚细胞壁抗高渗，常与嗜盐杆菌共生。", "us": "高盐环境（盐田、咸水湖）微生物群落成员。", "mn": "盐球菌；盐里的小球"},
+  {"la": "Sulfolobus", "zh": "硫化叶菌（属）", "g": "古菌", "tag": "嗜热嗜酸古菌", "syl": "Sul·fo·LO·bus", "ph": "萨尔福「洛」武斯", "fe": "嗜热嗜酸古菌，叶状不规则细胞，氧化硫，最适 ~70–80 ℃、pH~2–3。", "us": "高温酸矿浸出（浸铜、浸铀）与环境修复用。", "mn": "sulfo＋lobus＝硫叶；热酸吃硫菌"},
+  {"la": "Thermoplasma", "zh": "热原体（属）", "g": "古菌", "tag": "嗜热嗜酸古菌", "syl": "Ther·mo·PLAS·ma", "ph": "特莫「普」拉斯马", "fe": "嗜热嗜酸古菌，无细胞壁，具细胞膜（非肽聚糖），~55–60 ℃、pH~2。", "us": "极端环境微生物膜结构与进化研究模式。", "mn": "thermo＋plasma＝热原体；无壁热菌"},
+  {"la": "Thermococcus", "zh": "热球菌（属）", "g": "古菌", "tag": "超嗜热古菌", "syl": "Ther·mo·COC·cus", "ph": "特莫「科」库斯", "fe": "超嗜热古菌，球状，严格厌氧，产 H₂，生于海底热液口（~85 ℃）。", "us": "极端酶（热稳定酶）的重要来源。", "mn": "热球菌；海底热泉菌"},
+  {"la": "Pyrococcus", "zh": "高温球菌（属）", "g": "古菌", "tag": "超嗜热古菌", "syl": "Py·ro·COC·cus", "ph": "皮罗「科」库斯", "fe": "超嗜热古菌，球状，严格厌氧，最适 ~100 ℃，产 H₂ 与 CO₂。", "us": "超耐热 DNA 聚合酶等工业酶的热门来源。", "mn": "pyro＝火；近沸水球菌"},
+  {"la": "Anabaena", "zh": "鱼腥藻（属）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "A·na·BAE·na", "ph": "阿纳「贝」纳", "fe": "丝状蓝细菌，有异形胞（固氮），能行产氧光合与固氮。", "us": "稻田生物固氮（满江红共生）与水体氮循环。", "mn": "鱼腥味；异形胞固氮"},
+  {"la": "Nostoc", "zh": "念珠藻（属）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "NO·stoc", "ph": "「诺」斯托克", "fe": "丝状蓝细菌，球形细胞串成念珠状，有异形胞固氮。", "us": "发菜、葛仙米等可食；固氮与水土保持。", "mn": "念珠串；发菜本体"},
+  {"la": "Nostoc flagelliforme", "zh": "发菜（念珠藻）", "g": "蓝细菌", "tag": "固氮蓝藻", "syl": "NO·stoc  fla·gel·li·FOR·me", "ph": "「诺」斯托克 弗拉盖利「福」尔梅", "fe": "念珠藻的一种，丝体毛发状，耐旱，生于干旱草原。", "us": "名贵食用蓝藻（发菜）；生态固沙重要。", "mn": "发状菜；固沙又好吃"},
+  {"la": "Oscillatoria", "zh": "颤藻（属）", "g": "蓝细菌", "tag": "丝状蓝藻", "syl": "O·scil·la·TO·ri·a", "ph": "奥西拉「托」里亚", "fe": "丝状蓝细菌，无鞘，靠滑行使藻丝颤动摆动。", "us": "池塘水华常见，部分产微囊藻毒素类似物。", "mn": "oscilla＝摆动；会抖的丝"},
+  {"la": "Lyngbya", "zh": "鞘丝藻（属）", "g": "蓝细菌", "tag": "丝状蓝藻", "syl": "Lyng·BY·a", "ph": "林「比」亚", "fe": "丝状蓝细菌，藻丝外具明显胶鞘，常成团块。", "us": "热带海域成害（海草病），也产活性肽。", "mn": "鞘外有衣；礁石上的丝"},
+  {"la": "Spirulina", "zh": "螺旋藻（属）", "g": "蓝细菌", "tag": "螺旋蓝藻", "syl": "Spi·ru·LI·na", "ph": "斯皮鲁「利」纳", "fe": "螺旋状蓝细菌，无异形胞但能固氮，蛋白含量高。", "us": "高蛋白保健食品（钝顶、极大螺旋藻）与饲料。", "mn": "spiral＝螺旋；蛋白藻"},
+  {"la": "Microcystis", "zh": "微囊藻（属）", "g": "蓝细菌", "tag": "球状蓝藻", "syl": "Mi·cro·CYS·tis", "ph": "米克罗「西斯」蒂斯", "fe": "球状蓝细菌，群集成囊状，富营养水体易暴发水华。", "us": "产微囊藻毒素，饮用水安全重点监控对象。", "mn": "micro＋cyst＝微囊；水华毒藻"},
+  {"la": "Synechococcus", "zh": "聚球藻（属）", "g": "蓝细菌", "tag": "单细胞蓝藻", "syl": "Sy·ne·cho·COC·cus", "ph": "西内科「科」库斯", "fe": "单细胞蓝细菌，海洋与淡水广布，是海洋初级生产力主力。", "us": "海洋碳循环与光合固碳重要参与者。", "mn": "syn＋coccus＝聚球；海洋小蓝点"},
+  {"la": "Prochlorococcus", "zh": "原绿球藻（属）", "g": "蓝细菌", "tag": "单细胞蓝藻", "syl": "Pro·chlo·ro·COC·cus", "ph": "普罗克洛罗「科」库斯", "fe": "极小的光合蓝细菌，含叶绿素 a/b 类似物，海洋最丰富的光合生物。", "us": "全球海洋固碳与产氧的关键微型生产者。", "mn": "原绿；海洋最微小的光合者"},
+  {"la": "Saccharomyces cerevisiae", "zh": "酿酒酵母", "g": "酵母菌", "tag": "芽殖酵母", "syl": "Sa·cca·ro·my·CES  ce·re·VI·siae", "ph": "萨克哈罗米「塞」斯 塞雷「维」西埃", "fe": "单细胞芽殖真菌，兼性厌氧，发酵糖产乙醇与 CO₂，模式真核。", "us": "酿酒、面包发酵与真核分子生物学研究的核心。", "mn": "cerevisiae＝啤酒；酵母之王"},
+  {"la": "Saccharomyces pastorianus", "zh": "卡尔酵母（下面酵母）", "g": "酵母菌", "tag": "芽殖酵母", "syl": "Sa·cca·ro·my·CES  pas·to·ri·A·nus", "ph": "萨克哈罗米「塞」斯 帕斯托里「阿」努斯", "fe": "低温下发酵的酿酒酵母近缘种，沉于底部（下面发酵）。", "us": "拉格啤酒（下面发酵啤酒）酿造用酵母。", "mn": "pastorianus；拉格啤酒酵母"},
+  {"la": "Saccharomyces rouxii", "zh": "鲁氏酵母", "g": "酵母菌", "tag": "耐高渗酵母", "syl": "Sa·cca·ro·my·CES  rou·XI·i", "ph": "萨克哈罗米「塞」斯 鲁「克」西伊", "fe": "耐高渗酵母，能在高盐/高糖环境生长并产风味。", "us": "酱油、豆酱等高盐发酵的重要菌种。", "mn": "鲁氏；酱园里的耐盐酵母"},
+  {"la": "Schizosaccharomyces pombe", "zh": "粟酒裂殖酵母", "g": "酵母菌", "tag": "裂殖酵母", "syl": "Schi·zo·sa·ccha·ro·my·CES  POM·be", "ph": "希佐萨克哈罗米「塞」斯 「庞」贝", "fe": "以裂殖（一分为二）繁殖的酵母，细胞杆状，真核模式之二。", "us": "细胞周期与染色体研究的重要模式生物。", "mn": "pombe＝粟酒；裂殖模式菌"},
+  {"la": "Candida utilis", "zh": "产朊假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  u·ti·LIS", "ph": "坎迪「达」 乌蒂「利」斯", "fe": "假丝酵母，能同化多种糖与无机氮，蛋白含量高。", "us": "单细胞蛋白（SCP）与饲料蛋白生产菌。", "mn": "utilis＝有用；蛋白饲料菌"},
+  {"la": "Candida tropicalis", "zh": "热带假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  tro·pi·CA·lis", "ph": "坎迪「达」 特罗皮「卡」利斯", "fe": "假丝酵母，能利用烷烃/油脂生长，适应性强。", "us": "石油蛋白、长链二元酸发酵及环境修复用。", "mn": "热带；吃油的酵母"},
+  {"la": "Candida albicans", "zh": "白色假丝酵母", "g": "酵母菌", "tag": "假丝酵母", "syl": "Can·di·da  al·bi·CANS", "ph": "坎迪「达」 阿尔比「坎」斯", "fe": "人体正常菌群之一，条件致病时可致念珠菌感染。", "us": "医药与微生物学研究的致病酵母模型。", "mn": "albicans＝白；鹅口疮元凶"},
+  {"la": "Pichia pastoris", "zh": "巴斯德毕赤酵母", "g": "酵母菌", "tag": "甲醇酵母", "syl": "Pi·chi·a  pas·to·ris", "ph": "皮「奇」亚 帕斯「托」里斯", "fe": "甲基营养酵母，以甲醇为唯一碳源，强启动子宜表达外源蛋白。", "us": "重组蛋白（疫苗、酶）高效表达的工程宿主。", "mn": "毕赤；蛋白表达工厂"},
+  {"la": "Kluyveromyces marxianus", "zh": "马克思克鲁维酵母", "g": "酵母菌", "tag": "克鲁维酵母", "syl": "Kluy·ve·ro·my·CES  mar·xi·A·nus", "ph": "克卢维罗米「塞」斯 马克西「阿」努斯", "fe": "克鲁维酵母，能发酵乳糖，耐热，生长快。", "us": "乳清（乳糖）利用、乳糖酶与单细胞蛋白生产。", "mn": "克鲁维；吃乳糖的酵母"},
+  {"la": "Kluyveromyces lactis", "zh": "乳酸克鲁维酵母", "g": "酵母菌", "tag": "克鲁维酵母", "syl": "Kluy·ve·ro·my·CES  LAC·tis", "ph": "克卢维罗米「塞」斯 「拉」克蒂斯", "fe": "克鲁维酵母，能发酵乳糖，常用于异源蛋白表达。", "us": "乳清转化与食品酶（乳糖酶）生产。", "mn": "lactis＝乳；乳清利用菌"},
+  {"la": "Hansenula polymorpha", "zh": "多形汉逊酵母", "g": "酵母菌", "tag": "甲醇酵母", "syl": "Han·se·nu·la  po·ly·MOR·pha", "ph": "汉塞「努」拉 波利「莫」尔法", "fe": "甲基营养酵母，细胞多形，强甲醇启动子利于蛋白表达。", "us": "重组蛋白与单细胞蛋白生产的工程酵母。", "mn": "多形；甲醇蛋白工厂"},
+  {"la": "Torulopsis（Candida）glabrata", "zh": "光滑球拟酵母", "g": "酵母菌", "tag": "球拟酵母", "syl": "Tor·u·lop·sis  gla·BRA·ta", "ph": "托鲁洛「普」西斯 格拉「布拉」塔", "fe": "小型酵母，常作 Candida glabrata，条件致病。", "us": "医院环境中常见的机会致病酵母。", "mn": "光滑；机会致病菌"},
+  {"la": "Rhodotorula", "zh": "红酵母（属）", "g": "酵母菌", "tag": "红酵母", "syl": "Rho·do·to·ru·LA", "ph": "罗多托鲁「拉」", "fe": "产类胡萝卜素使菌落呈红/橙色的酵母，好氧。", "us": "类胡萝卜素（天然色素）生产与油脂积累研究。", "mn": "rhodo＝红；胡萝卜素红菌"},
+  {"la": "Debaryomyces", "zh": "德巴利酵母（属）", "g": "酵母菌", "tag": "德巴利酵母", "syl": "De·ba·ry·o·my·CES", "ph": "德巴里奥米「塞」斯", "fe": "耐盐耐硝化的酵母，常见于腌制品与高盐环境。", "us": "发酵食品（香肠、酱油）风味与防腐相关。", "mn": "德巴利；腌货里的酵母"},
+  {"la": "Cryptococcus", "zh": "隐球酵母（属）", "g": "酵母菌", "tag": "隐球酵母", "syl": "Cryp·to·COC·cus", "ph": "克里普托「科」库斯", "fe": "具荚膜的酵母，代表种新型隐球菌为机会致病菌。", "us": "医学真菌学与荚膜机制研究对象。", "mn": "crypto＝隐藏；荚膜酵母"},
+  {"la": "Yarrowia lipolytica", "zh": "解脂耶氏酵母", "g": "酵母菌", "tag": "解脂酵母", "syl": "Yar·ro·wi·a  li·po·LY·ti·ca", "ph": "亚罗「维」亚 利波利「提」卡", "fe": "能大量分泌脂肪酶/蛋白酶、同化烃类的酵母。", "us": "油脂化工、酶制剂与单细胞蛋白生产。", "mn": "lipolytica＝解脂；吃油的菌"},
+  {"la": "Zygosaccharomyces rouxii", "zh": "鲁氏接合酵母", "g": "酵母菌", "tag": "接合酵母", "syl": "Zy·go·sa·ccha·ro·my·CES  rou·XI·i", "ph": "兹戈萨克哈罗米「塞」斯 鲁「克」西伊", "fe": "耐高渗、耐盐的接合酵母，产酱香风味。", "us": "酱油、味噌等传统高盐发酵的核心酵母。", "mn": "zygo＝接合；酱香之源"},
+  {"la": "Brettanomyces", "zh": "酒香酵母（属）", "g": "酵母菌", "tag": "酒香酵母", "syl": "Bret·ta·no·my·CES", "ph": "布雷塔诺米「塞」斯", "fe": "产四氢吡喃类香气的酵母，葡萄酒/啤酒中可增香或致劣。", "us": "精酿啤酒与葡萄酒风味（马厩香）相关菌。", "mn": "brett；酒里的香与臭"},
+  {"la": "Aspergillus niger", "zh": "黑曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  NI·ger", "ph": "阿斯佩尔「吉」鲁斯 「尼」杰尔", "fe": "丝状真菌，分生孢子头黑色，好氧，产大量有机酸与酶。", "us": "柠檬酸、葡萄糖酸发酵与糖化酶、纤维素酶生产。", "mn": "黑孢子；柠檬酸大王"},
+  {"la": "Aspergillus oryzae", "zh": "米曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  o·RY·zae", "ph": "阿斯佩尔「吉」鲁斯 奥「里」泽", "fe": "丝状真菌，分生孢子黄绿色，富含蛋白酶与淀粉酶。", "us": "酱油、味噌、清酒酿造的「国菌」（日本）。", "mn": "oryzae＝米；酱曲之魂"},
+  {"la": "Aspergillus flavus", "zh": "黄曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  FLA·vus", "ph": "阿斯佩尔「吉」鲁斯 「弗」拉武斯", "fe": "丝状真菌，分生孢子黄绿色，在霉变花生/玉米上产黄曲霉毒素。", "us": "食品安全重点监控；产毒与致癌研究模型。", "mn": "flavus＝黄；剧毒黄曲霉毒素"},
+  {"la": "Aspergillus nidulans", "zh": "构巢曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  ni·du·LANS", "ph": "阿斯佩尔「吉」鲁斯 尼杜「兰」斯", "fe": "丝状真菌，分生孢子绿/黄色，遗传背景清晰。", "us": "真菌遗传学与次级代谢调控的模式生物。", "mn": "构巢；遗传模式霉"},
+  {"la": "Aspergillus terreus", "zh": "土曲霉", "g": "霉菌", "tag": "丝状真菌", "syl": "A·sper·GIL·lus  TER·re·us", "ph": "阿斯佩尔「吉」鲁斯 「泰」雷乌斯", "fe": "丝状真菌，分生孢子土黄色，产洛伐他汀等。", "us": " statin 类降脂药（洛伐他汀）的生产菌。", "mn": "土色；降脂药源"},
+  {"la": "Penicillium chrysogenum", "zh": "产黄青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  chry·so·GE·num", "ph": "佩尼西利「乌」姆 克吕索「盖」努姆", "fe": "丝状真菌，青绿色分生孢子，产青霉素。", "us": "青霉素（首个抗生素）的工业高产菌种。", "mn": "chrysogenum＝产金；青霉素母机"},
+  {"la": "Penicillium citrinum", "zh": "桔青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ci·TRI·num", "ph": "佩尼西利「乌」姆 西「特里」努姆", "fe": "丝状真菌，桔黄色分生孢子，产桔青霉素。", "us": "霉变大米常见菌，产肾毒素；也用于核酸生产。", "mn": "citrinum＝桔黄；霉米毒素菌"},
+  {"la": "Penicillium camemberti", "zh": "卡门柏青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ca·mem·BER·ti", "ph": "佩尼西利「乌」姆 卡芒「贝」尔蒂", "fe": "丝状真菌，白色柔毛状，分解脂肪与蛋白产香。", "us": "软质干酪（卡门贝尔、布里）表面熟成菌。", "mn": "卡门贝尔；奶酪白毛"},
+  {"la": "Penicillium roqueforti", "zh": "娄地青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ro·que·FOR·ti", "ph": "佩尼西利「乌」姆 罗克福「尔」蒂", "fe": "丝状真菌，蓝绿色孢子，耐氧低，产风味与青霉香。", "us": "蓝纹干酪（洛克福）内部的呈香霉菌。", "mn": "蓝纹奶酪之心"},
+  {"la": "Penicillium expansum", "zh": "扩展青霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Pe·ni·cil·li·UM  ex·pan·SUM", "ph": "佩尼西利「乌」姆 埃克斯潘「苏」姆", "fe": "丝状真菌，侵害苹果等水果，产展青霉素。", "us": "贮藏水果腐烂与毒素（展青霉素）监控对象。", "mn": "扩展；烂苹果霉"},
+  {"la": "Rhizopus oryzae", "zh": "米根霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Rhi·zo·PUS  o·RY·zae", "ph": "里佐「普」斯 奥「里」泽", "fe": "丝状真菌，假根状菌丝、黑色孢子囊，糖化力强。", "us": "米酒/甜酒曲、乳酸与糖化酶（根霉淀粉酶）生产。", "mn": "根霉；酒曲糖化菌"},
+  {"la": "Rhizopus stolonifer", "zh": "黑根霉（匍枝根霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Rhi·zo·PUS  sto·lo·ni·FER", "ph": "里佐「普」斯 斯托洛尼「费」尔", "fe": "丝状真菌，匍匐菌丝、黑色毛状霉，常见于面包。", "us": "面包/果蔬腐生霉，也是接合生殖教学材料。", "mn": "黑面包霉；接合生殖范例"},
+  {"la": "Mucor racemosus", "zh": "总状毛霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Mu·COR  ra·ce·MO·sus", "ph": "穆「科」尔 拉塞「莫」苏斯", "fe": "丝状真菌，无隔菌丝，白色絮状，产孢子囊。", "us": "腐生霉；传统腐乳（毛豆腐）发酵菌种之一。", "mn": "毛霉；腐乳白毛菌"},
+  {"la": "Mucor mucedo", "zh": "大毛霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Mu·COR  mu·CE·do", "ph": "穆「科」尔 穆「塞」多", "fe": "丝状真菌，生长迅速，大型孢子囊，常见于土壤粪便。", "us": "土壤腐生霉，常与根霉混淆的教学种。", "mn": "大毛霉；土里的大霉"},
+  {"la": "Neurospora crassa", "zh": "粗糙脉孢菌（红色面包霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Neu·ro·SPO·ra  CRAS·sa", "ph": "神经罗「斯」波拉 「克」拉斯萨", "fe": "丝状真菌，子囊孢子红色，有性/无性世代清晰。", "us": "真菌遗传学（一基因一酶）经典模式生物。", "mn": "脉孢；红色面包霉模式"},
+  {"la": "Trichoderma reesei", "zh": "里氏木霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Tri·cho·DER·ma  ree·SE·i", "ph": "特里科「德」尔马 雷「塞」伊", "fe": "丝状真菌，绿色分生孢子，分泌极强纤维素酶系。", "us": "纤维素酶（纺织、饲料、生物质糖化）主力生产菌。", "mn": "木霉；纤维素酶工厂"},
+  {"la": "Trichoderma viride", "zh": "绿色木霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Tri·cho·DER·ma  VI·ri·de", "ph": "特里科「德」尔马 「维」里德", "fe": "丝状真菌，绿色分生孢子，产木霉素与纤维素酶。", "us": "生物防治（拮抗病原菌）与酶生产用。", "mn": "viride＝绿；生防绿霉"},
+  {"la": "Monascus purpureus", "zh": "红曲霉（紫色红曲霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Mo·nas·cus  pur·PU·re·us", "ph": "莫「纳」斯库斯 普尔普「雷」乌斯", "fe": "丝状真菌，产红/紫色色素（红曲色素）与莫纳可林 K。", "us": "红曲米（红糟）、降脂功能成分与食品着色。", "mn": "红曲；东方红酵"},
+  {"la": "Fusarium graminearum", "zh": "禾谷镰刀菌", "g": "霉菌", "tag": "丝状真菌", "syl": "Fu·sa·ri·UM  gra·mi·ne·A·rum", "ph": "富萨里「乌」姆 格拉米内「阿」鲁姆", "fe": "丝状真菌，镰刀形大孢子，侵害小麦玉米产呕吐毒素。", "us": "粮谷赤霉病与镰刀菌毒素（DON）防控对象。", "mn": "镰刀；麦穗毒霉"},
+  {"la": "Fusarium oxysporum", "zh": "尖镰孢菌", "g": "霉菌", "tag": "丝状真菌", "syl": "Fu·sa·ri·UM  o·xy·SPO·rum", "ph": "富萨里「乌」姆 奥克西「斯」波鲁姆", "fe": "丝状真菌，镰刀形孢子，多种专化型致植物枯萎病。", "us": "作物土传枯萎病病原与生物防治研究。", "mn": "尖镰；植物枯萎病源"},
+  {"la": "Botrytis cinerea", "zh": "灰葡萄孢（灰霉）", "g": "霉菌", "tag": "丝状真菌", "syl": "Bo·try·tis  ci·ne·RE·a", "ph": "博特「里」蒂斯 西内「雷」阿", "fe": "丝状真菌，灰色霉层，侵害果蔬（灰霉病），也能贵腐。", "us": "葡萄贵腐酒（贵腐菌）与果蔬采后病害双重角色。", "mn": "灰霉；贵腐亦病害"},
+  {"la": "Geotrichum candidum", "zh": "白地霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Geo·tri·chum  can·DI·dum", "ph": "格奥特里「库」姆 坎「迪」杜姆", "fe": "裂殖酵母状霉菌，形成关节孢子，分解蛋白脂肪。", "us": "干酪（如卡门贝尔）表面熟成与风味菌。", "mn": "白地霉；奶酪风味菌"},
+  {"la": "Aureobasidium pullulans", "zh": "出芽短梗霉", "g": "霉菌", "tag": "丝状真菌", "syl": "Au·re·o·ba·si·di·UM  pul·lu·LANS", "ph": "奥雷奥巴西迪「乌」姆 普卢卢「兰」斯", "fe": "黑酵母状真菌，出芽繁殖，产普鲁兰多糖。", "us": "普鲁兰（pullulan）食品胶与生物被膜研究。", "mn": "出芽短梗；普鲁兰胶源"},
+  {"la": "Cladosporium", "zh": "枝孢霉（属）", "g": "霉菌", "tag": "丝状真菌", "syl": "Cla·do·SPO·ri·um", "ph": "克拉多「斯」波里乌姆", "fe": "丝状真菌，橄榄色分生孢子链，广泛分布于空气植物。", "us": "常见空气过敏原与果蔬表面腐生霉。", "mn": "枝孢；空气中的黑霉"},
+  {"la": "Agaricus bisporus", "zh": "双孢蘑菇（洋菇）", "g": "担子菌", "tag": "食用菌", "syl": "A·ga·ri·cus  bi·SPO·rus", "ph": "阿加里「库」斯 比「斯」波鲁斯", "fe": "伞菌，菌褶褐色，担子上多为双核孢子，世界栽培最广。", "us": "商业化栽培最多的食用菌（白蘑菇、褐菇）。", "mn": "双孢；超市洋菇"},
+  {"la": "Lentinula edodes", "zh": "香菇", "g": "担子菌", "tag": "食用菌", "syl": "Len·ti·nu·la  e·DO·tes", "ph": "伦蒂努「拉」 埃「多」特斯", "fe": "伞菌，菌盖有鳞片，木腐生，担孢子无色。", "us": "东亚最重要的栽培食用菌，含香菇多糖。", "mn": "edodes＝可食；香蕈之王"},
+  {"la": "Pleurotus ostreatus", "zh": "平菇（糙皮侧耳）", "g": "担子菌", "tag": "食用菌", "syl": "Pleu·ro·tus  os·tre·A·tus", "ph": "普勒罗「图」斯 奥斯特雷「阿」图斯", "fe": "侧耳属，菌盖呈贝壳状、侧生，木屑基质易栽培。", "us": "大宗栽培食用菌，粗放易种（平菇）。", "mn": "ostreatus＝牡蛎；蚝菇"},
+  {"la": "Pleurotus eryngii", "zh": "杏鲍菇", "g": "担子菌", "tag": "食用菌", "syl": "Pleu·ro·tus  e·ryn·GII", "ph": "普勒罗「图」斯 埃林「吉」伊", "fe": "侧耳属，肉质子实体粗大，具杏仁香。", "us": "广栽培的优质食用菌（杏鲍菇）。", "mn": "杏鲍；鲍鱼口感菇"},
+  {"la": "Flammulina velutipes", "zh": "金针菇", "g": "担子菌", "tag": "食用菌", "syl": "Flam·mu·li·na  ve·lu·TI·pes", "ph": "弗拉穆利「纳」 韦卢「提」佩斯", "fe": "伞菌，菌柄细长金黄，低温出菇。", "us": "常见栽培食用菌（金针菇），火锅常客。", "mn": "velutipes＝天鹅绒柄；金针菇"},
+  {"la": "Hypsizygus marmoreus", "zh": "真姬菇（蟹味菇）", "g": "担子菌", "tag": "食用菌", "syl": "Hyp·si·zy·gus  mar·mo·RE·us", "ph": "希普西「齐」古斯 马尔莫「雷」乌斯", "fe": "玉蕈属，丛生、菌盖灰白有大理石纹，蟹香味。", "us": "工厂化栽培食用菌（蟹味菇/白玉菇）。", "mn": "大理石纹；蟹味白玉菇"},
+  {"la": "Volvariella volvacea", "zh": "草菇", "g": "担子菌", "tag": "食用菌", "syl": "Vol·va·ri·el·la  vol·va·CE·a", "ph": "沃尔瓦里「埃」拉 沃尔瓦「塞」阿", "fe": "伞菌，具菌托（脚苞），高温型，子实体卵形至伞状。", "us": "热带栽培食用菌（草菇），鲜食为主。", "mn": "volva＝菌托；草堆上的菇"},
+  {"la": "Pholiota nameko", "zh": "滑菇（榆黄蘑近缘）", "g": "担子菌", "tag": "食用菌", "syl": "Pho·li·o·ta  na·ME·ko", "ph": "福利奥「塔」 纳「梅」科", "fe": "伞菌，菌盖黏滑，丛生木腐生。", "us": "日本及东亚栽培食用菌（滑菇/滑子蘑）。", "mn": "nameko；黏滑小菇"},
+  {"la": "Ganoderma lucidum", "zh": "灵芝", "g": "担子菌", "tag": "药用菌", "syl": "Ga·no·der·ma  lu·CI·dum", "ph": "加诺「德」尔马 卢「奇」杜姆", "fe": "多孔菌，漆样光泽红褐色菌盖，木腐生。", "us": "传统药用真菌，含三萜与多糖（灵芝）。", "mn": "lucidum＝光亮；仙草灵芝"},
+  {"la": "Auricularia auricula-judae", "zh": "木耳", "g": "担子菌", "tag": "食用菌", "syl": "Au·ri·cu·la·ri·a  au·ri·cu·la·ju·dae", "ph": "奥里库拉「里」亚 奥里库拉尤「达」埃", "fe": "胶质耳状子实体，生于阔叶树枯木。", "us": "常见栽培食用菌（黑木耳），爽滑富胶质。", "mn": "auricula＝耳；黑木耳"},
+  {"la": "Tremella fuciformis", "zh": "银耳", "g": "担子菌", "tag": "食用菌", "syl": "Tre·mel·la  fu·ci·FOR·mis", "ph": "特雷「梅」拉 富西「福」尔米斯", "fe": "胶质、花瓣状白色子实体，需伴生香灰菌才能完成生活史。", "us": "滋补食用菌（银耳/白木耳），羹汤常用。", "mn": "fuciformis＝海藻形；雪耳"},
+  {"la": "Dictyophora indusiata", "zh": "竹荪", "g": "担子菌", "tag": "食用菌", "syl": "Dic·ty·o·pho·ra  in·du·si·A·ta", "ph": "迪克提奥「福」拉 因杜西「阿」塔", "fe": "鬼笔科，具网格菌裙（菌 net），形态奇特。", "us": "名贵食用菌（竹荪），清香脆嫩。", "mn": "indusiata＝裙；网状菌裙"},
+  {"la": "Coprinus comatus", "zh": "毛头鬼伞（鸡腿菇）", "g": "担子菌", "tag": "食用菌", "syl": "Co·pri·nus  co·MA·tus", "ph": "科普里「努」斯 科「马」图斯", "fe": "伞菌，幼时柱状似鸡腿，成熟自溶墨汁状。", "us": "可栽培食用菌（鸡腿菇），鲜嫩宜鲜食。", "mn": "comatus＝毛；鸡腿菇"},
+  {"la": "Grifola frondosa", "zh": "灰树花（舞茸）", "g": "担子菌", "tag": "药用菌", "syl": "Gri·fo·la  fron·DO·sa", "ph": "格里福「拉」 弗龙「多」萨", "fe": "多孔菌，呈莲花/脑状大丛，木腐生。", "us": "药用与食用菌（灰树花/舞茸），含β-葡聚糖。", "mn": "frondosa＝叶状；舞茸"},
+  {"la": "Hericium erinaceus", "zh": "猴头菇", "g": "担子菌", "tag": "药用菌", "syl": "He·ri·ci·um  e·ri·na·CE·us", "ph": "赫里「奇」乌姆 埃里纳「塞」乌斯", "fe": "齿菌，子实体布满针状菌刺，形似猴头。", "us": "名贵食药两用菌（猴头菇），养胃。", "mn": "erinaceus＝刺猬；猴头菌"},
+  {"la": "Chlorella", "zh": "小球藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Chlo·rel·la", "ph": "克洛「雷」拉", "fe": "单细胞绿藻，球形，叶绿体杯状，光合效率高。", "us": "高蛋白单细胞食品/饲料，污水净化与固碳。", "mn": "chlorella＝小绿；蛋白藻"},
+  {"la": "Chlorella pyrenoidosa", "zh": "蛋白核小球藻", "g": "藻类", "tag": "绿藻", "syl": "Chlo·rel·la  py·re·noi·DO·sa", "ph": "克洛「雷」拉 皮雷诺伊「多」萨", "fe": "小球藻的一种，具蛋白核（pyrenoid），蛋白含量高。", "us": "优质单细胞蛋白与保健食品来源。", "mn": "蛋白核；高蛋白小球藻"},
+  {"la": "Scenedesmus", "zh": "栅藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Sce·ne·DES·mus", "ph": "塞内「德」斯穆斯", "fe": "群体绿藻，4–8 个细胞排成栅状，常见于淡水。", "us": "污水净化、生物燃料（油脂）与饵料藻。", "mn": "栅状排列；污水清道夫"},
+  {"la": "Dunaliella salina", "zh": "杜氏盐藻", "g": "藻类", "tag": "绿藻", "syl": "Du·na·li·el·la  sa·LI·na", "ph": "杜纳利「埃」拉 萨「利」纳", "fe": "无壁单细胞绿藻，耐极高盐，高盐下积累β-胡萝卜素。", "us": "天然β-胡萝卜素（色素）生产藻。", "mn": "salina＝盐；盐湖红藻"},
+  {"la": "Chlamydomonas", "zh": "衣藻（属）", "g": "藻类", "tag": "绿藻", "syl": "Chla·my·do·MO·nas", "ph": "克拉米多「莫」纳斯", "fe": "具两根鞭毛、眼点的单细胞绿藻，有性/无性清晰。", "us": "藻类遗传学、鞭毛与趋光性研究的模式生物。", "mn": "衣藻；鞭毛模式藻"},
+  {"la": "Euglena", "zh": "眼虫（属）", "g": "藻类", "tag": "裸藻", "syl": "Eu·GLE·na", "ph": "埃「格」莱纳", "fe": "具鞭毛与叶绿体的单细胞，兼养（有光光合、无光异养）。", "us": "水体富营养指示生物；也可作饵料/蛋白源。", "mn": "眼点虫；动植物兼有"},
+  {"la": "Spirogyra", "zh": "水绵（属）", "g": "藻类", "tag": "绿藻", "syl": "Spi·ro·GY·ra", "ph": "斯皮罗「吉」拉", "fe": "丝状绿藻，叶绿体呈螺旋带状，接合生殖典型。", "us": "淡水常见丝状藻，教学展示接合生殖。", "mn": "spiro＝螺旋；带状叶绿体"},
+  {"la": "Ulva", "zh": "石莼（属，海白菜）", "g": "藻类", "tag": "绿藻", "syl": "UL·va", "ph": "「乌」尔瓦", "fe": "叶状绿藻（浒苔/石莼），两层细胞构成的「海白菜」。", "us": "食用海藻与海水养殖环境指示。", "mn": "海白菜；两层的绿"},
+  {"la": "Porphyra", "zh": "紫菜（属）", "g": "藻类", "tag": "红藻", "syl": "Por·phy·ra", "ph": "波尔「菲」拉", "fe": "叶状红藻，含藻红素，是紫菜（海苔）的原料。", "us": "重要经济海藻（紫菜/海苔）养殖。", "mn": "紫菜；海苔本体"},
+  {"la": "Gracilaria", "zh": "江蓠（属）", "g": "藻类", "tag": "红藻", "syl": "Gra·ci·la·ri·a", "ph": "格拉西拉「里」亚", "fe": "红藻，枝柱状，富含琼胶（琼脂）成分。", "us": "琼脂（洋菜）提取的主要原料海藻。", "mn": "琼脂原料藻"},
+  {"la": "Laminaria", "zh": "海带（属）", "g": "藻类", "tag": "褐藻", "syl": "La·mi·na·ri·a", "ph": "拉米纳「里」亚", "fe": "大型褐藻，具假根、柄与叶状带片，含褐藻胶。", "us": "海带养殖与褐藻胶（藻胶）工业原料。", "mn": "海带；褐藻胶源"},
+  {"la": "Sargassum", "zh": "马尾藻（属）", "g": "藻类", "tag": "褐藻", "syl": "Sar·gas·sum", "ph": "萨尔「加」苏姆", "fe": "大型褐藻，具气囊与固着器，漂浮成马尾藻海。", "us": "褐藻胶与褐藻多酚来源，药用/饲料。", "mn": "气囊漂浮；马尾藻海"},
+  {"la": "Nannochloropsis", "zh": "微拟球藻（属）", "g": "藻类", "tag": "褐藻（微藻）", "syl": "Nan·no·chlo·rop·sis", "ph": "南诺克隆「普」西斯", "fe": "单细胞褐藻门微藻，油脂含量高，海水种为主。", "us": "微藻生物柴油与 EPA 油脂生产热点藻。", "mn": "微拟球；产油微藻"},
+  {"la": "Haematococcus pluvialis", "zh": "雨生红球藻", "g": "藻类", "tag": "绿藻", "syl": "Hae·ma·to·COC·cus  plu·vi·A·lis", "ph": "赫马托「科」库斯 普卢维「阿」利斯", "fe": "绿藻，胁迫下大量积累虾青素（红色）。", "us": "天然虾青素（强抗氧化剂）生产藻。", "mn": "haemato＝血；虾青素红藻"},
+  {"la": "Isochrysis", "zh": "等鞭金藻（属）", "g": "藻类", "tag": "金藻", "syl": "I·so·chry·sis", "ph": "伊索「克」里斯", "fe": "金藻，具两根不等长鞭毛，富含 DHA 等脂肪酸。", "us": "水产幼苗（贝类、虾）优质饵料微藻。", "mn": "金藻；育苗饵料"},
+  {"la": "Navicula", "zh": "舟形藻（属）", "g": "藻类", "tag": "硅藻", "syl": "Na·vi·cu·la", "ph": "纳维「库」拉", "fe": "硅藻，壳面舟形，具硅质细胞壁（硅酸盐）。", "us": "淡水/海水浮游硅藻，指示水体与饵料。", "mn": "舟形；硅壳微藻"},
+  {"la": "Asterionella", "zh": "星杆藻（属）", "g": "藻类", "tag": "硅藻", "syl": "As·te·ri·o·nel·la", "ph": "阿斯特里奥「内」拉", "fe": "硅藻，细胞星状辐射排列成群体。", "us": "淡水浮游硅藻，水质指示与饵料。", "mn": "星杆；放射状硅藻"},
+  {"la": "Crypthecodinium cohnii", "zh": "寇氏隐甲藻", "g": "藻类", "tag": "甲藻", "syl": "Cryp·the·co·di·ni·um  COH·ni·i", "ph": "克里普特科迪「尼」乌姆 「科」恩尼伊", "fe": "甲藻，异养可发酵，天然富集 DHA。", "us": "工业化发酵生产藻油 DHA 的菌株。", "mn": "隐甲藻；DHA 藻油源"},
+  {"la": "Bacteriophage T4", "zh": "T4 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE T4", "ph": "巴克泰里奥「菲」吉 T4", "fe": "感染大肠杆菌的双链 DNA 噬菌体，具尾鞘与二十面体头部。", "us": "分子生物学经典模式（基因调控、DNA 复制研究）。", "mn": "噬菌体；细菌的病毒"},
+  {"la": "Bacteriophage λ", "zh": "λ 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE λ", "ph": "巴克泰里奥「菲」吉 λ", "fe": "感染大肠杆菌的温和噬菌体，可溶原或裂解，基因组图谱清晰。", "us": "基因工程载体（λ 噬菌体载体）与调控研究。", "mn": "λ；溶原裂解双模"},
+  {"la": "Bacteriophage M13", "zh": "M13 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE M13", "ph": "巴克泰里奥「菲」吉 M13", "fe": "丝状单链 DNA 噬菌体，不裂解而持续分泌噬菌体颗粒。", "us": "噬菌体展示技术（抗体/肽库）的核心载体。", "mn": "丝状；展示技术载体"},
+  {"la": "Bacteriophage φX174", "zh": "φX174 噬菌体", "g": "病毒", "tag": "噬菌体", "syl": "Ba·c·te·ri·o·PHAGE φX174", "ph": "巴克泰里奥「菲」吉 φX174", "fe": "单链 DNA 噬菌体，基因组极小，首个被测全序列的 DNA 生物。", "us": "分子生物学与测序史上的标志性病毒。", "mn": "φX174；测序里程碑"},
+  {"la": "Tobacco mosaic virus", "zh": "烟草花叶病毒", "g": "病毒", "tag": "植物病毒", "syl": "To·BAC·co  mo·SA·ic  VI·rus", "ph": "托「巴」科 莫「赛」克 「维」鲁斯", "fe": "杆状 RNA 植物病毒，衣壳螺旋排列，首个被结晶的病毒。", "us": "植物病毒研究模式，曾证「遗传物质是核酸」。", "mn": "烟草杆状；病毒学奠基"},
+  {"la": "Cauliflower mosaic virus", "zh": "花椰菜花叶病毒", "g": "病毒", "tag": "植物病毒", "syl": "Cau·li·FLOW·er  mo·SA·ic  VI·rus", "ph": "考利「弗」劳尔 莫「赛」克 「维」鲁斯", "fe": "双链 DNA 植物病毒（花椰菜花叶病毒科），转化研究用。", "us": "植物基因工程载体（CaMV 35S 启动子）来源。", "mn": "花叶；35S 启动子源"},
+  {"la": "Influenza virus", "zh": "流感病毒", "g": "病毒", "tag": "动物病毒", "syl": "In·flu·EN·za  VI·rus", "ph": "因弗卢「恩」扎 「维」鲁斯", "fe": "分节段单链 RNA 病毒，包膜有血凝素/神经氨酸酶，易变异。", "us": "引起季节性流感；疫苗需每年更新。", "mn": "流感；年年变脸的病毒"},
+  {"la": "Human immunodeficiency virus", "zh": "人类免疫缺陷病毒（HIV）", "g": "病毒", "tag": "动物病毒", "syl": "Hu·man  im·mu·no·de·fi·ci·EN·cy  VI·rus", "ph": "休曼 伊姆诺德菲西「恩」西 「维」鲁斯", "fe": "逆转录 RNA 病毒，攻击 CD4⁺ T 细胞，致艾滋病。", "us": "艾滋病病原；抗逆转录病毒治疗靶点。", "mn": "HIV；攻击免疫的病毒"},
+  {"la": "Hepatitis B virus", "zh": "乙型肝炎病毒", "g": "病毒", "tag": "动物病毒", "syl": "He·pa·ti·tis  B  VI·rus", "ph": "赫帕「提」蒂斯 B 「维」鲁斯", "fe": "部分双链 DNA 病毒，嗜肝，可致慢性肝炎与肝癌。", "us": "乙肝病原；疫苗与抗病毒治疗研究对象。", "mn": "乙肝；嗜肝 DNA 病毒"},
+  {"la": "SARS-CoV-2", "zh": "新型冠状病毒", "g": "病毒", "tag": "动物病毒", "syl": "SARS-CoV-2", "ph": "SARS-CoV-2", "fe": "具刺突（S 蛋白）的冠状病毒，单链 RNA，引起新冠肺炎。", "us": "2019 年起全球大流行病原；疫苗研发焦点。", "mn": "新冠；带刺突的冠状病毒"},
+  {"la": "Adenovirus", "zh": "腺病毒（属）", "g": "病毒", "tag": "动物病毒", "syl": "A·de·no·VI·rus", "ph": "阿德诺「维」鲁斯", "fe": "无包膜双链 DNA 病毒，衣壳二十面体，致呼吸道/结膜感染。", "us": "基因治疗与疫苗载体研究常用。", "mn": "腺病毒；基因载体"},
+  {"la": "Herpes simplex virus", "zh": "单纯疱疹病毒", "g": "病毒", "tag": "动物病毒", "syl": "Her·pes  sim·plex  VI·rus", "ph": "赫「尔」佩斯 西姆「普」莱克斯 「维」鲁斯", "fe": "双链 DNA 病毒，可潜伏感染（神经节）后复发。", "us": "口唇/生殖器疱疹病原；潜伏感染模型。", "mn": "疱疹；潜伏复发的病毒"},
+  {"la": "Poliovirus", "zh": "脊髓灰质炎病毒", "g": "病毒", "tag": "动物病毒", "syl": "Po·lio·VI·rus", "ph": "波利奥「维」鲁斯", "fe": "无包膜单链 RNA 病毒，侵犯运动神经元致瘫痪。", "us": "小儿麻痹病原；灭活/减毒疫苗已近消灭它。", "mn": "脊灰；疫苗消灭目标"},
+  {"la": "Rotavirus", "zh": "轮状病毒", "g": "病毒", "tag": "动物病毒", "syl": "Ro·ta·VI·rus", "ph": "罗塔「维」鲁斯", "fe": "分节段双链 RNA 病毒，轮状衣壳，致婴幼儿腹泻。", "us": "婴幼儿腹泻主要病原；有口服疫苗。", "mn": "轮状；宝宝腹泻菌"},
+  {"la": "Rabies virus", "zh": "狂犬病病毒", "g": "病毒", "tag": "动物病毒", "syl": "RA·bies  VI·rus", "ph": "「雷」比斯 「维」鲁斯", "fe": "弹状单链 RNA 病毒，嗜神经，致死率近 100%。", "us": "狂犬病病原；暴露后疫苗可预防。", "mn": "狂犬；致命神经病毒"},
+  {"la": "Vaccinia virus", "zh": "痘苗病毒", "g": "病毒", "tag": "动物病毒", "syl": "Vac·ci·ni·a  VI·rus", "ph": "瓦克西「尼」亚 「维」鲁斯", "fe": "双链 DNA 痘病毒，与牛痘近缘，用作疫苗载体。", "us": "天花疫苗株；也是基因治疗载体。", "mn": "痘苗；天花疫苗载体"},
+  {"la": "Sendai virus", "zh": "仙台病毒", "g": "病毒", "tag": "动物病毒", "syl": "Sen·dai  VI·rus", "ph": "森「大」伊 「维」鲁斯", "fe": "副黏病毒，单链 RNA，能介导细胞融合。", "us": "细胞融合（杂交瘤制备）与实验用病毒。", "mn": "仙台；细胞融合剂"},
+  {"la": "Newcastle disease virus", "zh": "新城疫病毒", "g": "病毒", "tag": "动物病毒", "syl": "New·cas·tle  di·SEA·se  VI·rus", "ph": "纽「卡」索 迪「西」兹 「维」鲁斯", "fe": "副黏病毒，单链 RNA，致禽类新城疫，溶瘤潜力。", "us": "禽类烈性传染病病原；溶瘤病毒研究。", "mn": "新城疫；禽类瘟病"}
+];
+
+const GROUPS = {细菌:"var(--b)",放线菌:"var(--act)",古菌:"var(--arc)",蓝细菌:"var(--cyan)",酵母菌:"var(--yeast)",霉菌:"var(--mold)",担子菌:"var(--basid)",藻类:"var(--algae)",病毒:"var(--v)"};
+const GKEYS  = ["细菌","放线菌","古菌","蓝细菌","酵母菌","霉菌","担子菌","藻类","病毒"];
+const K_STATE="mmc_state_v1", K_CUSTOM="mmc_custom_v1", K_SET="mmc_set_v1", K_MISC="mmc_misc_v1";
+
+/* ============ 状态 ============ */
+let S = load(K_STATE,{});
+let CUSTOM = load(K_CUSTOM,[]);
+let SET = Object.assign({autoSpeak:false, rate:0.85, newLimit:20, shuffle:false}, load(K_SET,{}));
+let MISC = Object.assign({todayNew:0, lastDate:strDate(Date.now())}, load(K_MISC,{}));
+
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function strDate(t){const d=new Date(t);return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())}
+function p2(n){return n<10?"0"+n:""+n}
+function today(){const s=strDate(Date.now());if(MISC.lastDate!==s){MISC.lastDate=s;MISC.todayNew=0;save(K_MISC,MISC)}return s}
+
+let ALL = [];
+function rebuild(){ ALL = DATA.concat(CUSTOM); ALL.forEach((d,i)=>{ if(!d.id) d.id = "k"+i+"_"+(d.la||"").slice(0,6); }); }
+rebuild();
+
+function st(id){
+  if(!S[id]) S[id] = {ef:2.5, reps:0, iv:0, due:0, fav:0, seen:0, wrong:0, right:0};
+  return S[id];
+}
+/* SM-2 */
+function review(id, q){
+  today();
+  const s = st(id); const now = Date.now();
+  if(s.seen===0){ MISC.todayNew++; save(K_MISC,MISC); }
+  if(q<3){ s.reps=0; s.iv=0; s.due=now+5*60*1000; s.wrong++; }
+  else{
+    s.reps++;
+    if(s.reps===1) s.iv=1;
+    else if(s.reps===2) s.iv=6;
+    else s.iv=Math.max(1,Math.round(s.iv*s.ef));
+    s.ef = Math.min(2.5, Math.max(1.3, s.ef + (0.1-(5-q)*(0.08+(5-q)*0.02))));
+    s.due = now + s.iv*86400000;
+    if(q>=5) s.right++;
+  }
+  s.seen++; if(!s.seen) s.seen=1;
+  save(K_STATE,S);
+}
+function mastered(id){const s=S[id];return !!s && s.reps>=3 && s.iv>=6}
+function dueList(){
+  const now=Date.now();
+  return ALL.filter(d=>{const s=S[d.id];return s&&s.reps>0&&s.due<=now}).sort((a,b)=>S[a.id].due-S[b.id].due);
+}
+function newList(limit){
+  return ALL.filter(d=>{const s=S[d.id];return !s || s.seen===0}).slice(0,limit);
+}
+
+/* ============ TTS ============ */
+let VOICES=[];
+function loadVoices(){ try{VOICES=speechSynthesis.getVoices()||[]}catch(e){VOICES=[]} }
+if("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+function pickVoice(pref){
+  if(!VOICES.length) loadVoices();
+  for(const p of pref){ const v=VOICES.find(v=>v.lang && v.lang.toLowerCase().replace("_","-").startsWith(p)); if(v) return v; }
+  return null;
+}
+function speak(text, mode){
+  if(!("speechSynthesis" in window)){ toast("此浏览器不支持语音朗读"); return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  const u = new SpeechSynthesisUtterance(text);
+  const zh = mode==="zh";
+  u.lang = zh?"zh-CN":"la-LA";
+  const v = pickVoice(zh?["zh","cmn"]:["la","it","en"]);
+  if(v) u.voice=v; else u.lang = zh?"zh-CN":"en-US";
+  u.rate = zh?1:SET.rate;
+  try{ speechSynthesis.speak(u); }catch(e){}
+}
+
+/* ============ 学习队列 ============ */
+let queue=[], qi=0, cur=null, flipped=false, dragging=false, sx=0, sy=0, dx=0, noClick=false;
+
+let CUR_BOOK = "全部";
+function scopeList(){ return CUR_BOOK==="全部"? ALL : ALL.filter(d=>d.g===CUR_BOOK); }
+function buildBookQueue(){
+  today();
+  const sub = scopeList();
+  const now = Date.now();
+  const due = sub.filter(d=>{const s=S[d.id];return s&&s.reps>0&&s.due<=now});
+  const rest = Math.max(0, SET.newLimit - MISC.todayNew);
+  const nw = sub.filter(d=>{const s=S[d.id];return !s||s.seen===0}).slice(0, rest);
+  queue = due.concat(nw);
+  if(SET.shuffle){ for(let i=queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[queue[i],queue[j]]=[queue[j],queue[i]]} }
+  qi = 0;
+  const tag = document.getElementById("bookTag");
+  if(tag) tag.textContent = CUR_BOOK==="全部"? "全部词书" : ("词书 · "+CUR_BOOK);
+  renderStack();
+  updateRing();
+}
+function buildQueue(){ CUR_BOOK="全部"; buildBookQueue(); }
+function totalToday(){ return dueList().length + Math.max(0, SET.newLimit - MISC.todayNew); }
+
+/* ============ 渲染卡片 ============ */
+const stackEl = document.getElementById("stack");
+function sylHTML(s){
+  return (s||"").split("").length? s.split(/(\s+)/).map(part=>{
+    if(/^\s+$/.test(part)) return part;
+    return part.split("·").map(y=>{
+      if(/^[A-Z]{2,}$/.test(y)) return "<b>"+y+"</b>";
+      return y;
+    }).join("·");
+  }).join("") : "";
+}
+function phHTML(s){
+  return (s||"").replace(/「([^」]+)」/g,"<b>$1</b>");
+}
+function cardHTML(d){
+  const c = GROUPS[d.g]||"var(--pri)";
+  const s = st(d.id);
+  return '<div class="card" data-id="'+d.id+'">'+
+    '<div class="inner">'+
+      '<div class="face front">'+
+        '<div class="stripe" style="background:'+c+'"></div>'+
+        '<span class="gbact" style="background:'+c+'22;color:'+c+'">'+esc(d.g)+' · '+esc(d.tag||"")+'</span>'+
+        '<div class="fav">'+(s.fav?"⭐":"☆")+'</div>'+
+        '<div class="fcenter">'+
+        '<div class="latin">'+esc(d.la)+' <button class="spk" data-spk="la">🔊</button></div>'+
+        '<div class="zhname">'+esc(d.zh)+' <button class="spk" data-spk="zh">🔊</button></div>'+
+        (d.alias?'<div class="alias">'+esc(d.alias)+'</div>':'')+
+        '<div class="rowlab">读音 · 音节与重音</div>'+
+        '<div class="syl">'+sylHTML(d.syl)+'</div>'+
+        '<div class="rowlab">中文近似读音</div>'+
+        '<div class="ph">'+phHTML(d.ph)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="face back">'+
+        '<div class="stripe" style="background:'+c+'"></div>'+
+        '<span class="gbact" style="background:'+c+'22;color:'+c+';font-style:italic;font-family:Georgia,serif">'+esc(d.la)+'</span>'+
+        '<div class="sec"><h4>是什么 / 特征</h4><p>'+nl(d.fe)+'</p></div>'+
+        '<div class="sec"><h4>有什么作用 / 用途</h4><p>'+nl(d.us)+'</p></div>'+
+        (d.mn?'<div class="mnbox"><b>记忆点</b>　'+nl(d.mn)+'</div>':'')+
+        '<div class="kv" style="margin-top:auto;padding-top:14px">'+(d.tag?'<span class="chip">'+esc(d.tag)+'</span>':'')+'<span class="chip">'+esc(d.g)+'</span>'+
+          '<span class="chip">复习 '+(s.reps||0)+' 次</span>'+
+          (s.iv?'<span class="chip">间隔 '+s.iv+' 天</span>':'<span class="chip">新卡</span>')+'</div>'+
+        '</div>'+
+    '</div>'+
+  '</div>';
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+function nl(s){return esc(s).replace(/\n/g,"<br>")}
+
+function renderStack(){
+  stackEl.innerHTML="";
+  if(!queue.length){ renderDone(); return; }
+  const idx = qi % queue.length;
+  cur = queue[idx]; flipped=false;
+  const items = [cur, queue[(idx+1)%queue.length], queue[(idx+2)%queue.length]];
+  items.forEach((d,i)=>{
+    if(!d) return;
+    const el = document.createElement("div");
+    el.innerHTML = cardHTML(d);
+    const c = el.firstChild;
+    c.dataset.pos = i;
+    layout(c, i);
+    stackEl.appendChild(c);
+  });
+  const top = stackEl.querySelector('[data-pos="0"]');
+  if(top){ bindDrag(top); if(SET.autoSpeak) setTimeout(()=>speak(cur.la,"la"),260); }
+  updateRing();
+}
+function layout(c,i){
+  c.style.zIndex = 10-i;
+  c.style.transform = i===0 ? "none" : "translateY("+(i*14)+"px) scale("+(1-i*0.055)+",1)";
+  c.style.opacity = i>1?0.9:1;
+  c.classList.remove("flip");
+}
+function renderDone(){
+  stackEl.innerHTML = '<div class="card" style="transform:none"><div class="inner"><div class="face front" style="justify-content:center;align-items:center;text-align:center">'+
+    '<div style="font-size:44px">🎉</div><div style="font-size:18px;font-weight:800;margin-top:10px">本轮已完成</div>'+
+    '<div style="font-size:13px;color:var(--ink3);margin-top:8px;line-height:1.7">今日待复习 '+dueList().length+' 张，新卡上限 '+SET.newLimit+' 张<br>可继续练习或去词库挑重点</div>'+
+    '<div style="margin-top:16px;display:flex;gap:9px">'+
+      '<button class="btn pri" id="againBtn" style="max-width:150px">🔁 再来一轮</button>'+
+      '<button class="btn" id="weakBtn" style="max-width:150px">📌 只刷薄弱项</button>'+
+    '</div></div></div></div>';
+  document.getElementById("againBtn").onclick=()=>buildQueue();
+  document.getElementById("weakBtn").onclick=()=>{
+    const w = ALL.filter(d=>{const s=S[d.id];return s&&s.wrong>s.right});
+    queue = w.length? w : ALL.slice(0,20); qi=0; renderStack();
+    toast(w.length?("薄弱项 "+w.length+" 张"):"暂无记录，随机练习");
+  };
+}
+
+/* 拖拽 */
+function bindDrag(el){
+  let moved=false;
+  const down=(x,y)=>{dragging=true;moved=false;sx=x;sy=y;dx=0;el.classList.add("drag")};
+  const move=(x,y)=>{
+    if(!dragging) return;
+    dx=x-sx; const dy=y-sy;
+    if(Math.abs(dy)>Math.abs(dx)*1.4 && Math.abs(dy)>10){
+      dragging=false; el.classList.remove("drag"); el.style.transform=""; layout(el,0); restack(); return;
+    }
+    if(Math.abs(dx)>6||Math.abs(dy)>6) moved=true;
+    const rot = dx/22;
+    el.style.transform="translateX("+dx+"px) rotate("+rot+"deg)";
+    const others = stackEl.querySelectorAll(".card");
+    others.forEach(c=>{
+      const p = +c.dataset.pos;
+      if(p>0){ const t=Math.min(1,Math.abs(dx)/110); c.style.transform="translateY("+(p*14-7*t)+"px) scale("+(1-p*0.055+0.025*t)+",1)"; }
+    });
+  };
+  const up=()=>{
+    if(!dragging) return;
+    dragging=false; el.classList.remove("drag");
+    if(!moved){ layout(el,0); restack(); return; }
+    noClick=true; setTimeout(()=>{noClick=false},400);
+    if(dx < -80) next(-1);
+    else if(dx > 80) prev();
+    else { el.style.transform="translateX(0) rotate(0deg)"; restack(); }
+  };
+  el.addEventListener("touchstart",e=>{const t=e.touches[0];down(t.clientX,t.clientY)},{passive:true});
+  el.addEventListener("touchmove",e=>{const t=e.touches[0];move(t.clientX,t.clientY)},{passive:true});
+  el.addEventListener("touchend",up,{passive:true});
+  el.addEventListener("mousedown",e=>down(e.clientX,e.clientY));
+  window.addEventListener("mousemove",e=>move(e.clientX,e.clientY));
+  window.addEventListener("mouseup",up);
+}
+function restack(){ stackEl.querySelectorAll(".card").forEach(c=>{ if(!c.classList.contains("drag")) layout(c,+c.dataset.pos); }); }
+function flip(){
+  const top = stackEl.querySelector('[data-pos="0"]');
+  if(!top) return;
+  flipped=!flipped; top.classList.toggle("flip",flipped);
+}
+function next(dir){
+  const top = stackEl.querySelector('[data-pos="0"]');
+  if(top){
+    top.style.transition="transform .3s ease,opacity .3s ease";
+    top.style.transform="translateX("+(dir<0?-520:520)+"px) rotate("+(dir<0?-18:18)+"deg)";
+    top.style.opacity=0;
+  }
+  setTimeout(()=>{ qi++; if(qi>=queue.length){renderDone();updateRing();return;} renderStack(); },190);
+}
+function prev(){
+  if(qi===0){ toast("已经是第一张"); const t=stackEl.querySelector('[data-pos="0"]'); if(t){t.style.transition="transform .25s";t.style.transform="translateX(0) rotate(0deg)"} return; }
+  qi--; renderStack();
+}
+
+/* 标记 */
+document.querySelectorAll(".ctrl .btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    if(!cur) return;
+    const q = +b.dataset.g;
+    review(cur.id,q);
+    const s = st(cur.id);
+    if(q<3){ queue.push(cur); }
+    next(q>=5?1:-1);
+  });
+});
+const _bFlip=document.getElementById("btnFlip"); if(_bFlip) _bFlip.onclick=flip;
+const _bAuto=document.getElementById("btnAuto"); if(_bAuto) _bAuto.onclick=()=>{ if(cur) speak(cur.la,"la"); };
+const _bFav=document.getElementById("btnFav"); if(_bFav) _bFav.onclick=()=>{
+  if(!cur) return;
+  const s=st(cur.id); s.fav=s.fav?0:1; save(K_STATE,S);
+  toast(s.fav?"已收藏":"已取消收藏");
+  const f=stackEl.querySelector('[data-pos="0"] .fav'); if(f) f.textContent=s.fav?"⭐":"☆";
+};
+stackEl.addEventListener("click",e=>{
+  if(noClick||dragging) return;
+  const sp=e.target.closest("[data-spk]");
+  if(sp){ e.stopPropagation(); if(cur) speak(sp.dataset.spk==="zh"?cur.zh:cur.la, sp.dataset.spk); return; }
+  const f=e.target.closest(".fav");
+  if(f){
+    const cs=st(cur.id); cs.fav=cs.fav?0:1; save(K_STATE,S);
+    toast(cs.fav?"已收藏":"已取消收藏");
+    const el2=stackEl.querySelector('[data-pos="0"] .fav'); if(el2) el2.textContent=cs.fav?"⭐":"☆";
+    return;
+  }
+  if(dragging) return;
+  const top=stackEl.querySelector('[data-pos="0"]');
+  if(top && top.contains(e.target)) flip();
+});
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("mask").classList.contains("on")) return;
+  if(!document.getElementById("study").classList.contains("on")) return;
+  if(e.key==="ArrowLeft") prev();
+  else if(e.key==="ArrowRight") next(-1);
+  else if(e.key===" "){ e.preventDefault(); flip(); }
+  else if(e.key==="1") document.querySelector('.ctrl [data-g="0"]').click();
+  else if(e.key==="2") document.querySelector('.ctrl [data-g="3"]').click();
+  else if(e.key==="3") document.querySelector('.ctrl [data-g="5"]').click();
+});
+
+function updateRing(){
+  const scope = scopeList();
+  const total = scope.length, learn = scope.filter(d=>{const s=S[d.id];return s&&s.seen>0}).length;
+  const pct = total? learn/total : 0;
+  document.getElementById("ringFg").setAttribute("stroke-dashoffset", 94.2*(1-pct));
+  document.getElementById("ringNum").textContent = Math.round(pct*100)+"%";
+}
+
+/* ============ 测验 ============ */
+let QS = {mode:"la2zh", list:[], i:0, ok:0, done:false};
+document.getElementById("qMode").onclick=()=>{
+  QS.mode = QS.mode==="la2zh"?"zh2la":"la2zh";
+  document.getElementById("qMode").textContent = QS.mode==="la2zh"?"拉 → 中":"中 → 拉";
+};
+document.getElementById("qStart").onclick=startQuiz;
+function startQuiz(){
+  const pool = ALL.slice();
+  if(!pool.length) return;
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+  QS.list = pool.slice(0,10); QS.i=0; QS.ok=0; QS.done=false;
+  renderQ();
+}
+function renderQ(){
+  const b=document.getElementById("qBody");
+  if(QS.done){
+    const pct=Math.round(QS.ok/QS.list.length*100);
+    b.innerHTML='<div class="qcard"><div class="big">'+QS.ok+' / '+QS.list.length+'</div>'+
+      '<div class="qsub">正确率 '+pct+'% · '+(pct>=90?"优秀":pct>=70?"良好":pct>=50?"及格":"需要加强")+'</div>'+
+      '<div style="margin-top:16px"><button class="btn pri" id="qAgain" style="max-width:200px">再测一轮</button></div></div>';
+    document.getElementById("qAgain").onclick=startQuiz;
+    return;
+  }
+  const d = QS.list[QS.i];
+  const right = QS.mode==="la2zh"? d.zh : d.la;
+  const opts = [right];
+  const same = ALL.filter(x=>x.id!==d.id && x.g===d.g), any = ALL.filter(x=>x.id!==d.id);
+  const src = same.length>=3? same : any;
+  const used={}; used[d.id]=1;
+  while(opts.length<4 && src.length){
+    const r = src[Math.floor(Math.random()*src.length)];
+    if(used[r.id]) continue;
+    used[r.id]=1; opts.push(QS.mode==="la2zh"? r.zh : r.la);
+  }
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+  const qtext = QS.mode==="la2zh"? d.la : d.zh;
+  const ital  = QS.mode==="la2zh"?"":" i";
+  b.innerHTML='<div class="qprog">第 '+(QS.i+1)+' / '+QS.list.length+' 题</div>'+
+    '<div class="qcard"><div class="qword'+ital+'">'+esc(qtext)+'</div>'+
+      '<div class="qsub">'+(QS.mode==="la2zh"?"选出对应的中文名":"选出对应的拉丁学名")+'</div>'+
+      '<button class="spk" id="qSpk" style="margin-top:8px">🔊 朗读</button></div>'+
+    '<div class="opts" id="opts">'+opts.map((o,i)=>'<div class="opt" data-i="'+i+'" data-r="'+(o===right?1:0)+'">'+esc(o)+'</div>').join("")+'</div>';
+  document.getElementById("qSpk").onclick=()=>speak(qtext, QS.mode==="la2zh"?"la":"zh");
+  document.getElementById("opts").onclick=e=>{
+    const o=e.target.closest(".opt"); if(!o) return;
+    if(o.dataset.processed) return;
+    document.querySelectorAll(".opt").forEach(x=>{x.dataset.processed=1; if(x.dataset.r==="0"){x.classList.add("wrong");x.classList.add("dim")} });
+    if(o.dataset.r==="1"){ o.classList.add("right"); o.classList.remove("dim"); QS.ok++; }
+    else { o.classList.remove("dim"); o.classList.add("wrong"); }
+    setTimeout(()=>{ QS.i++; if(QS.i>=QS.list.length) QS.done=true; renderQ(); }, 700);
+  };
+}
+
+/* ============ 词库 ============ */
+let FILTER = "全部"; let lastFiltered = [];
+const filtersEl=document.getElementById("filters");
+function renderFilters(){
+  const arr=["全部","收藏","未掌握"].concat(GKEYS);
+  filtersEl.innerHTML = arr.map(f=>'<div class="fbtn'+(FILTER===f?" on":"")+'" data-f="'+f+'">'+f+'</div>').join("");
+}
+renderFilters();
+filtersEl.onclick=e=>{const f=e.target.closest(".fbtn"); if(!f) return; FILTER=f.dataset.f; renderFilters(); renderList();};
+document.getElementById("q").oninput=renderList;
+
+function renderList(){
+  const kw = document.getElementById("q").value.trim().toLowerCase();
+  let arr = ALL.filter(d=>{
+    if(FILTER==="收藏"){ if(!(S[d.id]&&S[d.id].fav)) return false; }
+    else if(FILTER==="未掌握"){ if(mastered(d.id)) return false; }
+    else if(GKEYS.indexOf(FILTER)>=0){ if(d.g!==FILTER) return false; }
+    if(kw){
+      const hay=(d.la+" "+d.zh+" "+(d.fe||"")+" "+(d.us||"")+" "+(d.mn||"")+" "+(d.tag||"")).toLowerCase();
+      if(hay.indexOf(kw)<0) return false;
+    }
+    return true;
+  });
+  lastFiltered = arr.slice();
+  document.getElementById("libCount").textContent = "共 "+arr.length+" 条";
+  const list=document.getElementById("list");
+  if(!arr.length){ list.innerHTML='<div class="empty">没有匹配的词条<br>换个关键词，或点下面按钮自己添加</div>'; return; }
+  list.innerHTML = arr.map(d=>{
+    const s=S[d.id]||{};
+    return '<div class="item" data-id="'+esc(d.id)+'">'+
+      '<span class="dot" style="background:'+(GROUPS[d.g]||"var(--pri)")+'"></span>'+
+      '<div style="flex:1;min-width:0"><div class="l">'+esc(d.la)+'</div><div class="z">'+esc(d.zh)+' · '+esc(d.tag||d.g)+'</div></div>'+
+      (mastered(d.id)?'<span class="chip" style="color:var(--ok)">已掌握</span>':'')+
+      '<span class="star" data-fav="'+esc(d.id)+'">'+(s.fav?"⭐":"☆")+'</span></div>';
+  }).join("");
+}
+document.getElementById("list").onclick=e=>{
+  const fav=e.target.closest("[data-fav]");
+  if(fav){ const s=st(fav.dataset.fav); s.fav=s.fav?0:1; save(K_STATE,S); renderList(); return; }
+  const it=e.target.closest(".item"); if(!it) return;
+  const d = ALL.find(x=>x.id===it.dataset.id); if(!d) return;
+  openDetail(d);
+};
+function openDetail(d){
+  const c=GROUPS[d.g]||"var(--pri)"; const s=st(d.id);
+  sheet('<div class="closebar"><b>词条详情</b><span class="x" onclick="closeSheet()">×</span></div>'+
+    '<div class="cardbox" style="margin:0">'+
+      '<span class="gbact" style="background:'+c+'22;color:'+c+'">'+esc(d.g)+' · '+esc(d.tag||"")+'</span>'+
+      '<div class="latin" style="margin-top:12px">'+esc(d.la)+' <button class="spk" data-spk="la">🔊</button></div>'+
+      '<div class="zhname">'+esc(d.zh)+' <button class="spk" data-spk="zh">🔊</button></div>'+
+      '<div class="rowlab">音节与重音</div><div class="syl">'+sylHTML(d.syl)+'</div>'+
+      '<div class="rowlab">中文近似读音</div><div class="ph">'+phHTML(d.ph)+'</div>'+
+      '<div class="sec"><h4>是什么 / 特征</h4><p>'+nl(d.fe)+'</p></div>'+
+      '<div class="sec"><h4>有什么作用 / 用途</h4><p>'+nl(d.us)+'</p></div>'+
+      (d.mn?'<div class="mnbox"><b>记忆点</b>　'+nl(d.mn)+'</div>':'')+
+      '<div class="row2" style="margin-top:14px">'+
+        '<button class="btn pri" id="dGo" style="max-width:none">🔍 去这张卡片</button>'+
+        '<button class="btn" id="dFav" style="max-width:none">'+(s.fav?"⭐ 取消收藏":"☆ 收藏")+'</button>'+
+      '</div>'+
+      '<div class="row2" style="margin-top:9px">'+
+        '<button class="btn bad" id="dDel" style="max-width:none">删除词条</button>'+
+      '</div>'+
+      '<div class="tagline">复习 '+(s.reps||0)+' 次 · 当前间隔 '+(s.iv||0)+' 天 · 答错 '+(s.wrong||0)+' 次</div>'+
+    '</div>');
+  sheetEl.onclick=ev=>{
+    const sp=ev.target.closest("[data-spk]");
+    if(sp) speak(sp.dataset.spk==="zh"?d.zh:d.la, sp.dataset.spk);
+  };
+  document.getElementById("dGo").onclick=()=>{ const id=d.id; closeSheet(); gotoCard(id); };
+  document.getElementById("dFav").onclick=()=>{ s.fav=s.fav?0:1; save(K_STATE,S); toast(s.fav?"已收藏":"已取消"); closeSheet(); renderList(); };
+  document.getElementById("dDel").onclick=()=>{
+    const i=CUSTOM.findIndex(x=>x.id===d.id);
+    if(i<0){ toast("内置词条不可删除"); return; }
+    CUSTOM.splice(i,1); save(K_CUSTOM,CUSTOM); delete S[d.id]; save(K_STATE,S);
+    rebuild(); closeSheet(); renderList(); toast("已删除");
+  };
+}
+
+document.getElementById("btnStudyFilter").onclick=()=>{
+  const list = lastFiltered.slice();
+  if(!list.length){ toast("当前筛选没有词条"); return; }
+  queue = list; qi=0;
+  const tag = document.getElementById("bookTag");
+  if(tag) tag.textContent = "筛选练习 · "+list.length+" 张";
+  switchTab("study"); renderStack(); updateRing();
+  toast("本轮 "+list.length+" 张（仅当前筛选）");
+};
+
+/* 添加词条 */
+document.getElementById("btnAdd").onclick=()=>{
+  sheet('<div class="closebar"><b>添加自定义词条</b><span class="x" onclick="closeSheet()">×</span></div>'+
+    '<div class="fld"><label>拉丁学名 *</label><input id="n_la" placeholder="如 Aspergillus niger"></div>'+
+    '<div class="fld"><label>中文名 *</label><input id="n_zh" placeholder="如 黑曲霉"></div>'+
+    '<div class="fld"><label>分类</label><select id="n_g">'+GKEYS.map(g=>'<option>'+g+'</option>').join("")+'</select></div>'+
+    '<div class="fld"><label>标签（革兰氏 / 类型）</label><input id="n_tag" placeholder="如 丝状真菌"></div>'+
+    '<div class="fld"><label>音节与重音（重读音节用大写）</label><input id="n_syl" placeholder="As·per·GIL·lus  NI·ger"></div>'+
+    '<div class="fld"><label>中文近似读音（重音用「」）</label><input id="n_ph" placeholder="阿斯佩尔「吉」鲁斯 「尼」杰尔"></div>'+
+    '<div class="fld"><label>是什么 / 特征</label><textarea id="n_fe"></textarea></div>'+
+    '<div class="fld"><label>能做什么（致病 / 用途）</label><textarea id="n_us"></textarea></div>'+
+    '<div class="fld"><label>记忆点</label><textarea id="n_mn"></textarea></div>'+
+    '<div class="row2"><button class="btn pri" id="n_save" style="max-width:none">保存</button><button class="btn" onclick="closeSheet()" style="max-width:none">取消</button></div>'+
+    '<div class="tagline">也可在「统计」页用 CSV 批量导入</div>');
+  document.getElementById("n_save").onclick=()=>{
+    const la=document.getElementById("n_la").value.trim(), zh=document.getElementById("n_zh").value.trim();
+    if(!la||!zh){ toast("拉丁名和中文名必填"); return; }
+    CUSTOM.push({id:"c"+Date.now(), la:la, zh:zh, g:document.getElementById("n_g").value,
+      tag:document.getElementById("n_tag").value.trim(), syl:document.getElementById("n_syl").value.trim(),
+      ph:document.getElementById("n_ph").value.trim(), fe:document.getElementById("n_fe").value.trim(),
+      us:document.getElementById("n_us").value.trim(), mn:document.getElementById("n_mn").value.trim(), custom:1});
+    save(K_CUSTOM,CUSTOM); rebuild(); closeSheet(); renderList(); updateRing(); toast("已添加");
+  };
+};
+
+/* ============ 统计 ============ */
+function renderStats(){
+  const seen = ALL.filter(d=>{const s=S[d.id];return s&&s.seen>0});
+  const m = ALL.filter(d=>mastered(d.id));
+  const fav = ALL.filter(d=>{const s=S[d.id];return s&&s.fav});
+  document.getElementById("sTop").innerHTML =
+    stat(ALL.length,"词条总数")+stat(seen.length,"已学习")+stat(m.length,"已掌握")+
+    stat(ALL.length-seen.length,"未接触")+stat(dueList().length,"今日待复习")+stat(fav.length,"收藏");
+  let h="";
+  GKEYS.forEach(g=>{
+    const arr=ALL.filter(d=>d.g===g); if(!arr.length) return;
+    const mm=arr.filter(d=>mastered(d.id)).length;
+    const pct=Math.round(mm/arr.length*100);
+    h+='<div class="prow"><div class="pl"><span>'+g+'</span><span style="color:var(--ink3)">'+mm+'/'+arr.length+'</span></div>'+
+       '<div class="bar"><i style="width:'+pct+'%;background:'+GROUPS[g]+'"></i></div></div>';
+  });
+  const tot=ALL.length, mp=m.length, pct=tot?Math.round(mp/tot*100):0;
+  h+='<div class="prow" style="margin-top:14px"><div class="pl"><span>总体</span><span style="color:var(--ink3)">'+mp+'/'+tot+'（'+pct+'%）</span></div>'+
+     '<div class="bar"><i style="width:'+pct+'%;background:var(--pri)"></i></div></div>';
+  document.getElementById("sProg").innerHTML=h;
+  const rest=Math.max(0,SET.newLimit-MISC.todayNew);
+  document.getElementById("sToday").innerHTML='<div class="pl" style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">'+
+    '<span>今日新卡</span><span>'+MISC.todayNew+' / '+SET.newLimit+'</span></div><div class="bar"><i style="width:'+(SET.newLimit?MISC.todayNew/SET.newLimit*100:0)+'%;background:var(--pri)"></i></div>'+
+    '<div class="pl" style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-top:14px">'+
+    '<span>待复习（已到期）</span><span>'+dueList().length+' 张</span></div>'+
+    '<div class="tagline">「已掌握」＝ 连续答对且复习间隔 ≥ 6 天</div>';
+}
+function stat(n,t){return '<div class="stat"><div class="n">'+n+'</div><div class="t">'+t+'</div></div>'}
+
+/* 导入导出 */
+document.getElementById("btnExport").onclick=()=>{
+  const blob=new Blob([JSON.stringify({v:1,state:S,custom:CUSTOM,set:SET,misc:MISC},null,1)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="microcards-backup-"+today()+".json"; a.click();
+  toast("已导出备份文件");
+};
+document.getElementById("btnImport").onclick=()=>{ const f=document.getElementById("fileIn"); f.dataset.type="json"; f.click(); };
+document.getElementById("btnCsv").onclick=()=>{ const f=document.getElementById("fileIn"); f.dataset.type="csv"; f.click(); };
+document.getElementById("fileIn").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    if(e.target.dataset.type==="json"){
+      try{
+        const o=JSON.parse(r.result);
+        if(o.state) S=o.state; if(o.custom) CUSTOM=o.custom; if(o.set) SET=Object.assign(SET,o.set); if(o.misc) MISC=o.misc;
+        save(K_STATE,S);save(K_CUSTOM,CUSTOM);save(K_SET,SET);save(K_MISC,MISC);
+        rebuild(); refresh(); toast("导入成功");
+      }catch(err){ toast("文件格式错误") }
+    } else {
+      const rows=parseCSV(r.result);
+      let n=0;
+      rows.forEach(c=>{
+        const la=c[0],zh=c[1];
+        if(!la||!zh) return;
+        CUSTOM.push({id:"c"+Date.now()+n, la:la, zh:zh, g:GKEYS.indexOf(c[2])>=0?c[2]:"细菌",
+          tag:c[3]||"", syl:c[4]||"", ph:c[5]||"", fe:c[6]||"", us:c[7]||"", mn:c[8]||"", custom:1});
+        n++;
+      });
+      save(K_CUSTOM,CUSTOM); rebuild(); refresh(); toast("导入 "+n+" 条词条");
+    }
+    e.target.value="";
+  };
+  r.readAsText(f,"utf-8");
+};
+function parseCSV(txt){
+  const rows=[]; let row=[],cur="",q=false;
+  txt=txt.replace(/^\uFEFF/,"");
+  for(let i=0;i<txt.length;i++){
+    const ch=txt[i];
+    if(q){ if(ch==='"'){ if(txt[i+1]==='"'){cur+='"';i++} else q=false } else cur+=ch }
+    else{ if(ch==='"') q=true; else if(ch===','){row.push(cur);cur=""} else if(ch==="\n"){row.push(cur);rows.push(row);row=[];cur=""} else if(ch!=="\r") cur+=ch }
+  }
+  if(cur||row.length){row.push(cur);rows.push(row)}
+  return rows.filter(r=>r.some(c=>c && c.trim()));
+}
+document.getElementById("btnReset").onclick=()=>{
+  sheet('<div class="closebar"><b>重置进度</b><span class="x" onclick="closeSheet()">×</span></div>'+
+    '<p style="font-size:14px;line-height:1.7;color:var(--ink2)">将清空所有学习记录（间隔、收藏、答错次数），自定义词条会保留。此操作不可撤销，建议先导出备份。</p>'+
+    '<div class="row2"><button class="btn bad" id="r_yes" style="max-width:none">确认重置</button><button class="btn" onclick="closeSheet()" style="max-width:none">取消</button></div>');
+  document.getElementById("r_yes").onclick=()=>{ S={}; save(K_STATE,S); MISC.todayNew=0; save(K_MISC,MISC); rebuild(); closeSheet(); refresh(); toast("已重置"); };
+};
+
+/* ============ 设置 ============ */
+document.getElementById("btnSet").onclick=()=>{
+  sheet('<div class="closebar"><b>设置</b><span class="x" onclick="closeSheet()">×</span></div>'+
+    '<div class="sw">新卡自动朗读拉丁名<input type="checkbox" id="s_auto"'+(SET.autoSpeak?" checked":"")+'></div>'+
+    '<div class="sw">随机顺序（打乱新卡与复习）<input type="checkbox" id="s_shuf"'+(SET.shuffle?" checked":"")+'></div>'+
+    '<div class="sw">朗读语速<div style="display:flex;align-items:center;gap:8px"><input type="range" id="s_rate" min="0.5" max="1.2" step="0.05" value="'+SET.rate+'" style="width:110px"><span id="s_ratev" style="font-size:12px;color:var(--ink3)">'+SET.rate+'</span></div></div>'+
+    '<div class="fld"><label>每日新卡上限</label><input type="number" id="s_lim" value="'+SET.newLimit+'" min="5" max="100"></div>'+
+    '<div class="row2"><button class="btn pri" id="s_save" style="max-width:none">保存</button><button class="btn" onclick="closeSheet()" style="max-width:none">关闭</button></div>'+
+    '<div class="ttl">怎么用（安装到手机桌面）</div>'+
+    '<div class="cardbox" style="font-size:13px;line-height:1.85;color:var(--ink2)">'+
+      '<b>iPhone（Safari）</b>：打开本文件 → 分享按钮 → 「添加到主屏幕」。<br>'+
+      '<b>安卓（Chrome）</b>：打开本文件 → 右上角菜单 → 「添加到主屏幕」。<br>'+
+      '<b>更稳的做法</b>：把这个 HTML 传到自己的网站/网盘/GitHub Pages 后用 https 打开再添加，离线与存储更可靠。<br>'+
+      '<b>发音</b>：调用手机内置语音引擎；拉丁语音色因机型而异，配合卡片上的「音节重音」和「中文近似读音」一起记更准。'+
+    '</div>'+
+    '<div class="tagline">共 '+ALL.length+' 条词条 · 数据均存储在本机，不上传</div>');
+  const rt=document.getElementById("s_rate");
+  rt.oninput=()=>document.getElementById("s_ratev").textContent=rt.value;
+  document.getElementById("s_save").onclick=()=>{
+    SET.autoSpeak=document.getElementById("s_auto").checked;
+    SET.shuffle=document.getElementById("s_shuf").checked;
+    SET.rate=parseFloat(rt.value);
+    SET.newLimit=Math.max(5,parseInt(document.getElementById("s_lim").value)||20);
+    save(K_SET,SET); closeSheet(); refresh(); toast("已保存");
+  };
+};
+
+/* ============ 通用 UI ============ */
+const mask=document.getElementById("mask"), sheetEl=document.getElementById("sheet");
+function sheet(html){ sheetEl.onclick=null; sheetEl.innerHTML=html; mask.classList.add("on"); }
+function closeSheet(){ mask.classList.remove("on"); }
+mask.onclick=e=>{ if(e.target===mask) closeSheet(); };
+window.closeSheet=closeSheet;
+let tt;
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("on"),1800); }
+
+function switchTab(v){
+  document.querySelectorAll("nav div").forEach(x=>x.classList.toggle("on", x.dataset.v===v));
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on", x.id===v));
+  if(v==="stats") renderStats();
+  if(v==="lib") renderList();
+  if(v==="books") renderBooks();
+  if(v==="quiz" && !QS.list.length) startQuiz();
+}
+document.querySelectorAll("nav div").forEach(d=>{
+  d.addEventListener("click",()=>switchTab(d.dataset.v));
+});
+
+/* 跳到指定卡片（搜到后直接进去背） */
+function gotoCard(id){
+  const d = ALL.find(x=>x.id===id); if(!d) return;
+  queue=[d]; qi=0; flipped=false;
+  const tag = document.getElementById("bookTag");
+  if(tag) tag.textContent = "搜到的卡片 · " + d.g;
+  switchTab("study"); renderStack(); updateRing();
+  toast("已定位：" + d.zh);
+}
+
+/* ============ 词书 ============ */
+function renderBooks(){
+  const wrap = document.getElementById("bookList");
+  if(!wrap) return;
+  const total = ALL.length;
+  const mAll = ALL.filter(d=>mastered(d.id)).length;
+  const DESC = {
+    "全部":"所有 9 类微生物",
+    "细菌":"杆菌 / 球菌 / 芽孢菌",
+    "放线菌":"链霉菌等产抗生素丝状菌",
+    "古菌":"产甲烷 / 嗜盐 / 嗜热",
+    "蓝细菌":"光合固氮 / 水华蓝藻",
+    "酵母菌":"芽殖 / 裂殖 / 发酵产乙醇",
+    "霉菌":"丝状真菌 / 产酶产毒素",
+    "担子菌":"蘑菇 / 食用菌 / 药用菌",
+    "藻类":"绿藻 / 红藻 / 褐藻 / 硅藻",
+    "病毒":"噬菌体 / 植物 / 动物病毒"
+  };
+  const seenAll = ALL.filter(d=>{const s=S[d.id];return s&&s.seen>0}).length;
+  let html = bookCard("全部", DESC["全部"], total, seenAll, mAll, "var(--pri)", "全部");
+  GKEYS.forEach(g=>{
+    const list = ALL.filter(d=>d.g===g);
+    const seen = list.filter(d=>{const s=S[d.id];return s&&s.seen>0}).length;
+    const m = list.filter(d=>mastered(d.id)).length;
+    html += bookCard(g, DESC[g]||"", list.length, seen, m, GROUPS[g], g);
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll(".book").forEach(el=>{
+    el.querySelector(".b-go").onclick=()=>startBook(el.dataset.g);
+  });
+}
+function bookCard(name, sub, total, seen, m, color, g){
+  const pct = total? Math.round(seen/total*100):0;
+  return '<div class="book" data-g="'+g+'">'+
+    '<div class="b-bar" style="background:linear-gradient(90deg,'+color+' '+pct+'%,var(--bg2) '+pct+'%)"></div>'+
+    '<div class="b-row"><span class="dot" style="background:'+color+'"></span><span class="b-name">'+esc(name)+'</span>'+
+    '<span class="b-count">'+total+' 词 · 已学 '+pct+'%</span></div>'+
+    '<div class="b-sub">'+esc(sub)+'</div>'+
+    '<div class="b-sub" style="margin-top:4px;color:var(--ink3)">已学 '+seen+' 词 · 已掌握 '+m+' 词</div>'+
+    '<button class="btn pri b-go" style="max-width:none;margin-top:10px">开始背这本 ▶</button>'+
+  '</div>';
+}
+function startBook(g){
+  CUR_BOOK = g;
+  buildBookQueue();
+  switchTab("study");
+  if(g!=="全部") toast("已进入词书：" + g);
+}
+document.getElementById("btnSearch").onclick=()=>{
+  switchTab("lib");
+  setTimeout(()=>{ const q=document.getElementById("q"); if(q){ q.focus(); q.scrollIntoView({block:"center"}); } }, 60);
+};
+
+function refresh(){ renderList(); renderStats(); updateRing(); if(document.getElementById("study").classList.contains("on")) buildQueue(); }
+
+/* ============ PWA ============ */
+(function(){
+  try{
+    const c=document.createElement("canvas"); c.width=c.height=180;
+    const x=c.getContext("2d");
+    x.fillStyle="#1b3a6b"; x.fillRect(0,0,180,180);
+    x.fillStyle="#ffffff";
+    x.beginPath(); x.ellipse(70,72,26,17,-0.5,0,7); x.fill();
+    x.beginPath(); x.ellipse(112,104,22,14,0.4,0,7); x.fill();
+    x.strokeStyle="#7fb2ff"; x.lineWidth=7; x.lineCap="round";
+    x.beginPath(); x.moveTo(88,88); x.lineTo(100,97); x.stroke();
+    x.fillStyle="#7fb2ff";
+    for(let i=0;i<7;i++){ const a=i/7*6.28, r=36+i*3; x.beginPath(); x.arc(90,88+Math.sin(a)*r*0.5, 5, 0, 7); x.fill(); }
+    const png=c.toDataURL("image/png");
+    document.getElementById("appleIcon").href=png;
+    document.getElementById("favicon").href=png;
+    const m={name:"微生物拉丁名卡片",short_name:"MicroCards",start_url:".",display:"standalone",
+      background_color:"#0f1729",theme_color:"#0f1729",orientation:"portrait",
+      icons:[{src:png,sizes:"180x180",type:"image/png",purpose:"any"}]};
+    document.getElementById("manifestLink").href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
+  }catch(e){}
+})();
+
+/* ============ 启动 ============ */
+today();
+buildQueue();
+renderList();
+renderStats();
+</script>
+</body>
+</html>
